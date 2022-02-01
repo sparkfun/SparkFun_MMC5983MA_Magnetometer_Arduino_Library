@@ -3,7 +3,7 @@ SparkFun Qwiic High Performance Magnetomter MMC5983MA
 
 ![SparkFun High Performance Magnetomter MMC5983MA]
 
-[*SparkX ToF TMF8801 (SPX-17716)*](https://www.sparkfun.com/products/19034)
+[*SparkFun High Performance Magnetomter MMC5983MA (SPX-19304)*](https://www.sparkfun.com/products/19034)
 
 MMC5983MA is a high performance 3 axis magnetometer with on chip signal processing with 18-bits of precision. It can measure fields in the +-8 Gauss range and it has I2C and SPI interfaces.
 
