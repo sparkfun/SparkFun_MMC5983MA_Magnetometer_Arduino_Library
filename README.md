@@ -1,0 +1,36 @@
+SparkFun Qwiic High Performance Magnetomter MMC5983MA
+=====================================================
+
+![SparkFun High Performance Magnetomter MMC5983MA]
+
+[*SparkX ToF TMF8801 (SPX-17716)*](https://www.sparkfun.com/products/19034)
+
+MMC5983MA is a high performance 3 axis magnetometer with on chip signal processing with 18-bits of precision. It can measure fields in the +-8 Gauss range and it has I2C and SPI interfaces.
+
+The device is AEC-Q100 compliant.
+
+Repository Contents
+-------------------
+
+* **/documents** - Datasheet, application notes, etc.
+* **/examples** - Example sketches for the library (.ino). Run these from the Arduino IDE. 
+* **/src** - Source files for the library (.cpp, .h).
+* **keywords.txt** - Keywords from this library that will be highlighted in the Arduino IDE. 
+* **library.properties** - General library properties for the Arduino package manager. 
+
+Library
+--------------
+* **[Arduino Library](https://github.com/sparkfun/SparkFun_MMC5983MA_Arduino_Library)** - Library for performing measurements.
+
+License Information
+-------------------
+
+This product is _**open source**_! 
+
+Please review the LICENSE.md file for license information. 
+
+If you have any questions or concerns on licensing, please contact techsupport@sparkfun.com.
+
+Please use, reuse, and modify these files as you see fit. Please maintain attribution to SparkFun Electronics and release anyThing Development Board derivative under the same license.
+
+Distributed as-is; no warranty is given.
