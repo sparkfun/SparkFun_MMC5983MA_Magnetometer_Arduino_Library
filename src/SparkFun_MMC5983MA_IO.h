@@ -1,8 +1,8 @@
 /*
   This is a library written for the MMC5983MA High Performance Magnetometer.
   SparkFun sells these at its website:
-  https://www.sparkfun.com/products/
-
+  https://www.sparkfun.com/products/19034
+  
   Do you like this library? Help support open source hardware. Buy a board!
 
   Written by Ricardo Ramos  @ SparkFun Electronics, February 2nd, 2022.
