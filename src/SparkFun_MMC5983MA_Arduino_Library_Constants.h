@@ -44,6 +44,7 @@ static const uint8_t INT_CTRL_1_REG = 0x0a;
 static const uint8_t INT_CTRL_2_REG = 0x0b;
 static const uint8_t INT_CTRL_3_REG = 0x0c;
 static const uint8_t PROD_ID_REG    = 0x2f;
+static const uint8_t DUMMY          = 0x0;
 									
 // Constants definitions            
 static const uint8_t I2C_ADDR       = 0x30;
@@ -86,7 +87,9 @@ enum class SF_MMC5983MA_ERROR
 {
   NONE,
   I2C_INITIALIZATION_ERROR,
+  SPI_INITIALIZATION_ERROR,
   INVALID_DEVICE,
+
 };
 
 #endif

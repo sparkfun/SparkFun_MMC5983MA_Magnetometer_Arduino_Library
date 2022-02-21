@@ -1,23 +1,25 @@
 #include <Arduino.h>
-#include "Wire.h"
+#include "SPI.h"
 #include "SparkFun_MMC5983MA_Arduino_Library.h"
 
-SFE_MMC5983MA sfe_mmc5983;
+SFE_MMC5983MA myMag;
+
+const uint8_t csPin = 4;
 
 void setup()
 {
     Serial.begin(115200);
-    Wire.begin();
-    if (sfe_mmc5983.begin())
+    SPI.begin();
+    if (myMag.begin(csPin))
     {
-        sfe_mmc5983.softReset();
+        myMag.softReset();
         Serial.println("MMC5983MA connected.");
         Serial.print("Die temperature: ");
-        int celsius = sfe_mmc5983.getTemperature();
+        int celsius = myMag.getTemperature();
         Serial.print(celsius);
         Serial.print("°C or ");
-        float farenheit = (celsius * 9.0f / 5.0f) + 32.0f;
-        Serial.print(static_cast<int>(farenheit));
+        float fahrenheit = (celsius * 9.0f / 5.0f) + 32.0f;
+        Serial.print((int)fahrenheit);
         Serial.println("°F.");
         Serial.println("Starting measurements in 2 seconds...");
         delay(2000);
@@ -41,9 +43,9 @@ void loop()
     double normalizedY = 0;
     double normalizedZ = 0;
 
-    currentX = sfe_mmc5983.getMeasurementX();
-    currentY = sfe_mmc5983.getMeasurementY();
-    currentZ = sfe_mmc5983.getMeasurementZ();
+    currentX = myMag.getMeasurementX();
+    currentY = myMag.getMeasurementY();
+    currentZ = myMag.getMeasurementZ();
 
     Serial.print("X axis raw value: ");
     Serial.print(currentX);
@@ -52,11 +54,11 @@ void loop()
     Serial.print("\tZ axis raw value: ");
     Serial.println(currentZ);
 
-    normalizedX = static_cast<double>(currentX) - 131072.0;
+    normalizedX = (double)currentX - 131072.0;
     normalizedX /= 131072.0;
-    normalizedY = static_cast<double>(currentY) - 131072.0;
+    normalizedY = (double)currentY - 131072.0;
     normalizedY /= 131072.0;
-    normalizedZ = static_cast<double>(currentZ) - 131072.0;
+    normalizedZ = (double)currentZ - 131072.0;
     normalizedZ /= 131072.0;
 
     Serial.print("X axis field (Gauss): ");

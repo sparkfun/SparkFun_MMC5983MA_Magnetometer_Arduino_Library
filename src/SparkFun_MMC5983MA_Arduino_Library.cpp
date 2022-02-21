@@ -5,7 +5,7 @@
 
   Do you like this library? Help support open source hardware. Buy a board!
 
-  Written by Ricardo Ramos  @ SparkFun Electronics, November 16th, 2021
+  Written by Ricardo Ramos  @ SparkFun Electronics, February 2nd, 2022.
   This file implements all functions used in the MMC5983MA High Performance Magnetometer Arduino Library.
 
   This program is distributed in the hope that it will be useful,
@@ -144,23 +144,36 @@ void SFE_MMC5983MA::setErrorCallback(void (*_errorCallback)(SF_MMC5983MA_ERROR e
     errorCallback = _errorCallback;
 }
 
-bool SFE_MMC5983MA::begin(byte address, TwoWire &wirePort)
+bool SFE_MMC5983MA::begin(TwoWire &wirePort)
 {
     // Initializes I2C and check if device responds
-    bool success = mmc_io.begin(address, wirePort);
+    bool success = mmc_io.begin(wirePort);
+
     if (!success)
     {
         SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::I2C_INITIALIZATION_ERROR);
         return false;
     }
+    return isConnected();
+}
 
+bool SFE_MMC5983MA::begin(uint8_t userCSPin, SPIClass &spiPort)
+{
+    bool success = mmc_io.begin(userCSPin);
+    if (!success)
+    {
+        SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::SPI_INITIALIZATION_ERROR);
+        return false;
+    }
     return isConnected();
 }
 
 bool SFE_MMC5983MA::isConnected()
 {
     // Poll device for its ID.
-    uint8_t response = mmc_io.readSingleByte(PROD_ID_REG);
+    uint8_t response;
+    response = mmc_io.readSingleByte(PROD_ID_REG);
+
     if (response != PROD_ID)
     {
         SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::INVALID_DEVICE);
@@ -223,21 +236,21 @@ bool SFE_MMC5983MA::isInterruptEnabled()
     return isShadowBitSet(INT_CTRL_0_REG, INT_MEAS_DONE_EN);
 }
 
-void SFE_MMC5983MA::enableSPI()
+void SFE_MMC5983MA::enable3WireSPI()
 {
     // This bit must be set through the shadow memory or we won't be
     // able to check if SPI is enabled using isSPIEnabled()
     setShadowBit(INT_CTRL_3_REG, SPI_3W);
 }
 
-void SFE_MMC5983MA::disableSPI()
+void SFE_MMC5983MA::disable3WireSPI()
 {
     // This bit must be cleared through the shadow memory or we won't be
     // able to check if is is enabled using isSPIEnabled()
     clearShadowBit(INT_CTRL_3_REG, SPI_3W);
 }
 
-bool SFE_MMC5983MA::isSPIEnabled()
+bool SFE_MMC5983MA::is3WireSPIEnabled()
 {
     // Get the bit value from the shadow register since the IC does not
     // allow reading INT_CTRL_3_REG register.
@@ -786,17 +799,22 @@ uint32_t SFE_MMC5983MA::getMeasurementX()
 
     uint32_t temp = 0;
     uint32_t result = 0;
-    temp = static_cast<uint32_t>(mmc_io.readSingleByte(X_OUT_0_REG));
+    uint8_t buffer[7] = {0};
+
+    mmc_io.readMultipleBytes(X_OUT_0_REG, buffer, 7);
+
+    temp = static_cast<uint32_t>(buffer[X_OUT_0_REG]);
     temp = temp << XYZ_0_SHIFT;
     result |= temp;
-    temp = static_cast<uint32_t>(mmc_io.readSingleByte(X_OUT_1_REG));
+
+    temp = static_cast<uint32_t>(buffer[X_OUT_1_REG]);
     temp = temp << XYZ_1_SHIFT;
     result |= temp;
-    temp = static_cast<uint32_t>(mmc_io.readSingleByte(XYZ_OUT_2_REG));
+
+    temp = static_cast<uint32_t>(buffer[XYZ_OUT_2_REG]);
     temp &= X2_MASK;
     temp = temp >> 6;
     result |= temp;
-
     return result;
 }
 
@@ -814,17 +832,25 @@ uint32_t SFE_MMC5983MA::getMeasurementY()
 
     uint32_t temp = 0;
     uint32_t result = 0;
-    temp = static_cast<uint32_t>(mmc_io.readSingleByte(Y_OUT_0_REG));
+    uint8_t registerValue = 0;
+
+    registerValue = (mmc_io.readSingleByte(Y_OUT_0_REG));
+
+    temp = static_cast<uint32_t>(registerValue);
     temp = temp << XYZ_0_SHIFT;
     result |= temp;
-    temp = static_cast<uint32_t>(mmc_io.readSingleByte(Y_OUT_1_REG));
+
+    registerValue = (mmc_io.readSingleByte(Y_OUT_1_REG));
+
+    temp = static_cast<uint32_t>(registerValue);
     temp = temp << XYZ_1_SHIFT;
     result |= temp;
-    temp = static_cast<uint32_t>(mmc_io.readSingleByte(XYZ_OUT_2_REG));
+
+    registerValue = (mmc_io.readSingleByte(XYZ_OUT_2_REG));
+    temp = static_cast<uint32_t>(registerValue);
     temp &= Y2_MASK;
     temp = temp >> 4;
     result |= temp;
-
     return result;
 }
 
@@ -842,16 +868,25 @@ uint32_t SFE_MMC5983MA::getMeasurementZ()
 
     uint32_t temp = 0;
     uint32_t result = 0;
-    temp = static_cast<uint32_t>(mmc_io.readSingleByte(Z_OUT_0_REG));
+    uint8_t registerValue = 0;
+
+    registerValue = (mmc_io.readSingleByte(Z_OUT_0_REG));
+
+    temp = static_cast<uint32_t>(registerValue);
     temp = temp << XYZ_0_SHIFT;
     result |= temp;
-    temp = static_cast<uint32_t>(mmc_io.readSingleByte(Z_OUT_1_REG));
+
+    registerValue = (mmc_io.readSingleByte(Z_OUT_1_REG));
+
+    temp = static_cast<uint32_t>(registerValue);
     temp = temp << XYZ_1_SHIFT;
     result |= temp;
-    temp = static_cast<uint32_t>(mmc_io.readSingleByte(XYZ_OUT_2_REG));
+
+    registerValue = (mmc_io.readSingleByte(XYZ_OUT_2_REG));
+
+    temp = static_cast<uint32_t>(registerValue);
     temp &= Z2_MASK;
     temp = temp >> 2;
     result |= temp;
-
     return result;
 }
