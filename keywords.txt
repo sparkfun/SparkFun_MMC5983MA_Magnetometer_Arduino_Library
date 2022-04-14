@@ -1,0 +1,62 @@
+#######################################
+# Syntax Coloring Map For SFE_MMC5983MA
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+SFE_MMC5983MA	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+setErrorCallback	KEYWORD2
+begin	KEYWORD2
+isConnected	KEYWORD2
+getTemperature	KEYWORD2
+softReset	KEYWORD2
+enableInterrupt	KEYWORD2
+disableInterrupt	KEYWORD2
+isInterruptEnabled	KEYWORD2
+enable3WireSPI	KEYWORD2
+disable3WireSPI	KEYWORD2
+is3WireSPIEnabled	KEYWORD2
+performSetOperation	KEYWORD2
+performResetOperation	KEYWORD2
+enableAutomaticSetReset	KEYWORD2
+disableAutomaticSetReset	KEYWORD2
+isAutomaticSetResetEnabled	KEYWORD2
+enableXChannel	KEYWORD2
+disableXChannel	KEYWORD2
+isXChannelEnabled	KEYWORD2
+enableYZChannels	KEYWORD2
+disableYZChannels	KEYWORD2
+areYZChannelsEnabled	KEYWORD2
+setFilterBandwidth	KEYWORD2
+getFilterBandwith	KEYWORD2
+enableContinuousMode	KEYWORD2
+disableContinuousMode	KEYWORD2
+isContinuousModeEnabled	KEYWORD2
+setContinuousModeFrequency	KEYWORD2
+getContinuousModeFrequency	KEYWORD2
+enablePeriodicSet	KEYWORD2
+disablePeriodicSet	KEYWORD2
+isPeriodicSetEnabled	KEYWORD2
+setPeriodicSetSamples	KEYWORD2
+getPeriodicSetSamples	KEYWORD2
+applyExtraCurrentPosToNeg	KEYWORD2
+removeExtraCurrentPosToNeg	KEYWORD2
+isExtraCurrentAppliedPosToNeg	KEYWORD2
+applyExtracurrentNegToPos	KEYWORD2
+removeExtracurrentNegToPos	KEYWORD2
+isExtraCurrentAppliedNegToPos	KEYWORD2
+getMeasurementX	KEYWORD2
+getMeasurementY	KEYWORD2
+getMeasurementZ	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
