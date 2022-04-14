@@ -1,13 +1,15 @@
-SparkFun Qwiic High Performance Magnetomter MMC5983MA
+SparkFun Triple Axis Magnetometer - MMC5983MA (Qwiic)
 =====================================================
 
 [![Triple Axis Magnetometer - MMC5983MA (Qwiic)](https://cdn.sparkfun.com//assets/parts/1/8/6/3/7/19034-Triple_Axis_Magnetometer_-_MMC5983MA__Qwiic_-01.jpg)](https://www.sparkfun.com/products/19034)
 
 [*Triple Axis Magnetometer - MMC5983MA (Qwiic)*](https://www.sparkfun.com/products/19034)
 
-MMC5983MA is a high performance 3 axis magnetometer with on chip signal processing with 18-bits of precision. It can measure fields in the +-8 Gauss range and it has I2C and SPI interfaces.
+The MMC5983MA is a highly sensitive triple axis magnetometer by MEMSIC. It is capable of sensing down to 0.4mG enabling a heading accuracy of ±0.5°. Output rates of 1000Hz, ±8G FSR, and 18-bit resolution make the MMC5983MA a phenomenal magnetic sensor for electronic compass applications.
 
-The device is AEC-Q100 compliant.
+Saturation is a problem for all mag sensors. The MMC5983MA has special built-in degaussing circuitry to clear any residual magnetization.
+
+We've got a feature complete Arduino library supporting I<sup>2</sup>C and SPI. Just search **SparkFun MMA5983MA** in the library manager and get measuring within minutes.
 
 Repository Contents
 -------------------
@@ -20,7 +22,7 @@ Repository Contents
 
 Library
 --------------
-* **[Arduino Library](https://github.com/sparkfun/SparkFun_MMC5983MA_Arduino_Library)** - Library for performing measurements.
+* **[Arduino Library](https://github.com/sparkfun/SparkFun_MMC5983MA_Magnetometer_Arduino_Library)** - Library for performing measurements.
 
 License Information
 -------------------
