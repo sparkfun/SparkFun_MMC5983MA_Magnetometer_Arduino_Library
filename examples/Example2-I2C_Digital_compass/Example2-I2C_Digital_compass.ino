@@ -1,40 +1,49 @@
-#include <Arduino.h>
-#include "Wire.h"
-#include "SparkFun_MMC5983MA_Arduino_Library.h"
+/*
+  Compute magnetic heading from the MMC5983MA
+  By: Nathan Seidle and Ricardo Ramos
+  SparkFun Electronics
+  Date: April 14th, 2022
+  License: SparkFun code, firmware, and software is released under the MIT License(http://opensource.org/licenses/MIT).
+
+  Feel like supporting our work? Buy a board from SparkFun!
+  https://www.sparkfun.com/products/19034
+
+  This example demonstrates how to compute the heading based on the basic X/Y/Z readings from the sensor over Qwiic
+
+  Hardware Connections:
+  Plug a Qwiic cable into the sensor and a RedBoard
+  If you don't have a platform with a Qwiic connection use the SparkFun Qwiic Breadboard Jumper
+  (https://www.sparkfun.com/products/17912) Open the serial monitor at 115200 baud to see the output
+*/
+
+#include <Wire.h>
+
+#include <SparkFun_MMC5983MA_Arduino_Library.h> //Click here to get the library: http://librarymanager/All#SparkFun_MMC5983MA
 
 SFE_MMC5983MA myMag;
 
 void setup()
 {
     Serial.begin(115200);
+    Serial.println("MMC5983MA Example");
+
     Wire.begin();
-    if (myMag.begin())
+
+    if (myMag.begin() == false)
     {
-        myMag.softReset();
-        Serial.println("MMC5983MA connected.");
-        Serial.print("Die temperature: ");
-        int celsius = myMag.getTemperature();
-        Serial.print(celsius);
-        Serial.print("°C or ");
-        float fahrenheit = (celsius * 9.0f / 5.0f) + 32.0f;
-        Serial.print((int)fahrenheit);
-        Serial.println("°F.");
-        Serial.println("Starting measurements in 2 seconds...");
-        delay(2000);
+        Serial.println("MMC5983MA did not respond - check your wiring. Freezing.");
+        while (true)
+            ;
     }
-    else
-    {
-        Serial.println("MMC5983MA did not respond - check your wiring.");
-        Serial.println("System halted.");
-        while (1)
-        {
-        }
-    }
+
+    myMag.softReset();
+
+    Serial.println("MMC5983MA connected");
 }
 
 void loop()
 {
-    uint32_t rawValue = 0;
+    unsigned int rawValue = 0;
     double heading = 0;
     double normalizedX = 0;
     double normalizedY = 0;
