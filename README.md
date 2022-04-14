@@ -1,9 +1,9 @@
 SparkFun Qwiic High Performance Magnetomter MMC5983MA
 =====================================================
 
-![SparkFun High Performance Magnetomter MMC5983MA]
+[![Triple Axis Magnetometer - MMC5983MA (Qwiic)](https://cdn.sparkfun.com//assets/parts/1/8/6/3/7/19034-Triple_Axis_Magnetometer_-_MMC5983MA__Qwiic_-01.jpg)](https://www.sparkfun.com/products/19034)
 
-[*SparkFun High Performance Magnetomter MMC5983MA (SPX-19304)*](https://www.sparkfun.com/products/19034)
+[*Triple Axis Magnetometer - MMC5983MA (Qwiic)*](https://www.sparkfun.com/products/19034)
 
 MMC5983MA is a high performance 3 axis magnetometer with on chip signal processing with 18-bits of precision. It can measure fields in the +-8 Gauss range and it has I2C and SPI interfaces.
 
