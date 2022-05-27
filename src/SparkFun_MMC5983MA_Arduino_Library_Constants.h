@@ -8,12 +8,8 @@
   Written by Ricardo Ramos  @ SparkFun Electronics, February 2nd, 2022.
   This file declares all constants used in the MMC5983MA High Performance Magnetometer Arduino Library.
 
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-  GNU General Public License for more details.
-  You should have received a copy of the GNU General Public License
-  along with this program. If not, see <http://www.gnu.org/licenses/>.
+  SparkFun code, firmware, and software is released under the MIT License(http://opensource.org/licenses/MIT).
+  See LICENSE.md for more information.
 */
 
 #ifndef _SPARKFUN_MMC5983MA_CONSTANTS_
