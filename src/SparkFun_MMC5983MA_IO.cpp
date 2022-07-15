@@ -25,6 +25,13 @@ bool SFE_MMC5983MA_IO::begin(TwoWire &i2cPort)
     return isConnected();
 }
 
+void SFE_MMC5983MA_IO::initSPISettings()
+{
+	//CPOL = 1, CPHA = 1 : SPI Mode 3
+	_mmcSpiSettings = SPISettings(2000000, MSBFIRST, SPI_MODE3); 
+}
+
+
 bool SFE_MMC5983MA_IO::begin(const uint8_t csPin, SPIClass &spiPort)
 {
     useSPI = true;
@@ -32,6 +39,22 @@ bool SFE_MMC5983MA_IO::begin(const uint8_t csPin, SPIClass &spiPort)
     digitalWrite(_csPin, HIGH);
     pinMode(_csPin, OUTPUT);
     _spiPort = &spiPort;
+
+		initSPISettings();
+
+    return isConnected();
+}
+
+bool SFE_MMC5983MA_IO::begin(const uint8_t csPin, SPISettings userSettings, SPIClass &spiPort)
+{
+    useSPI = true;
+    _csPin = csPin;
+    digitalWrite(_csPin, HIGH);
+    pinMode(_csPin, OUTPUT);
+    _spiPort = &spiPort;
+
+		_mmcSpiSettings = userSettings;
+
     return isConnected();
 }
 
