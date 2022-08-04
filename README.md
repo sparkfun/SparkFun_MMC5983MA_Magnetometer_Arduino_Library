@@ -1,19 +1,13 @@
-SparkFun Triple Axis Magnetometer - MMC5983MA (Qwiic) && SparkFun Micro Magnetometer - MMC5983MA (Qwiic)
+SparkFun MMC5983MA Magnetometer Arduino Library
 =====================================================
 
 <table class="table table-hover table-striped table-bordered">
-    <tr>
-        <th class="text-center"> 
-        </th>
-        <th class="text-center">
-        </th>
+    <tr align="center">
+        <td><a href="https://www.sparkfun.com/products/19034"><img src="https://cdn.sparkfun.com//assets/parts/1/8/6/3/7/19034-Triple_Axis_Magnetometer_-_MMC5983MA__Qwiic_-01.jpg" alt="SparkFun Triple Axis Magnetometer - MMC5983MA (Qwiic) (SPX-19034)"></a></td>
+        <td><a href="https://www.sparkfun.com/products/19921"><img src="https://cdn.sparkfun.com/assets/parts/1/9/6/5/3/19921_03.jpg" alt="SparkFun Qwiic Micro Magnetometer - MMC5983MA (SEN-19921)"></a></td>
     </tr>
     <tr align="center">
-        <td><a href="https://www.sparkfun.com/products/19034"><img src="https://cdn.sparkfun.com//assets/parts/1/8/6/3/7/19034-Triple_Axis_Magnetometer_-_MMC5983MA__Qwiic_-01.jpg" alt=""></a></td>
-        <td><a href="https://www.sparkfun.com/products/19921"><img src="https://cdn.sparkfun.com/assets/parts/1/9/6/5/3/19921_03.jpg" alt=""></a></td>
-    </tr>
-    <tr align="center">
-        <td><a href="https://www.sparkfun.com/products/19034">SparkFun Triple Axis Magnetometer - MMC5983MA (Qwiic) (SEN-19034)</a></td>
+        <td><a href="https://www.sparkfun.com/products/19034">SparkFun Triple Axis Magnetometer - MMC5983MA (Qwiic) (SPX-19034)</a></td>
         <td><a href="https://www.sparkfun.com/products/19921">SparkFun Qwiic Micro Magnetometer - MMC5983MA (SEN-19921)</a></td>
     </tr>
 </table>
@@ -33,6 +27,17 @@ Repository Contents
 * **keywords.txt** - Keywords from this library that will be highlighted in the Arduino IDE. 
 * **library.properties** - General library properties for the Arduino package manager. 
 
+Documentation
+--------------
+* **[Installing an Arduino Library Guide](https://learn.sparkfun.com/tutorials/installing-an-arduino-library)** - Basic information on how to install an Arduino library.
+* **[Hookup Guide](https://learn.sparkfun.com/tutorials/qwiic-micro-magnetometer---mmc5983ma-hookup-guide)** - Basic hookup guide for the Qwiic Micro Magnetometer - MMC5983MA.
+
+Products that use this Library
+----------------
+
+* [SEN-19921](https://www.sparkfun.com/products/19921) - SparkFun red version
+* [SPX-19034](https://www.sparkfun.com/products/19034) - SparkX version
+
 License Information
 -------------------
 
@@ -40,8 +45,10 @@ This product is _**open source**_!
 
 Please review the LICENSE.md file for license information. 
 
-If you have any questions or concerns on licensing, please contact techsupport@sparkfun.com.
-
-Please use, reuse, and modify these files as you see fit. Please maintain attribution to SparkFun Electronics and release anyThing Development Board derivative under the same license.
+If you have any questions or concerns on licensing, please contact technical support on our [SparkFun forums](https://forum.sparkfun.com/viewforum.php?f=152).
 
 Distributed as-is; no warranty is given.
+
+- Your friends at SparkFun.
+
+_<COLLABORATION CREDIT>_
