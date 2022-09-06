@@ -68,6 +68,7 @@ bool SFE_MMC5983MA_IO::isConnected()
         _spiPort->transfer(READ_REG(PROD_ID_REG));
         uint8_t readback = _spiPort->transfer(DUMMY);
         digitalWrite(_csPin, HIGH);
+        _spiPort->endTransaction();
         result = (readback == PROD_ID);
     }
     else
@@ -88,6 +89,7 @@ void SFE_MMC5983MA_IO::writeMultipleBytes(const uint8_t registerAddress, uint8_t
         _spiPort->transfer(registerAddress);
         _spiPort->transfer(buffer, packetLength);
         digitalWrite(_csPin, HIGH);
+        _spiPort->endTransaction();
     }
     else
     {
@@ -109,6 +111,7 @@ void SFE_MMC5983MA_IO::readMultipleBytes(const uint8_t registerAddress, uint8_t 
         _spiPort->transfer(READ_REG(registerAddress));
         _spiPort->transfer(buffer, packetLength);
         digitalWrite(_csPin, HIGH);
+        _spiPort->endTransaction();
     }
     else
     {
@@ -132,6 +135,7 @@ uint8_t SFE_MMC5983MA_IO::readSingleByte(const uint8_t registerAddress)
         _spiPort->transfer(READ_REG(registerAddress));
         result = _spiPort->transfer(DUMMY);
         digitalWrite(_csPin, HIGH);
+        _spiPort->endTransaction();
     }
     else
     {
@@ -153,6 +157,7 @@ void SFE_MMC5983MA_IO::writeSingleByte(const uint8_t registerAddress, const uint
         _spiPort->transfer(registerAddress);
         _spiPort->transfer(value);
         digitalWrite(_csPin, HIGH);
+        _spiPort->endTransaction();
     }
     else
     {
