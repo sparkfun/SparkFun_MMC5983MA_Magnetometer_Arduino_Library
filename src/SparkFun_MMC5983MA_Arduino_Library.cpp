@@ -155,7 +155,18 @@ bool SFE_MMC5983MA::begin(TwoWire &wirePort)
 
 bool SFE_MMC5983MA::begin(uint8_t userCSPin, SPIClass &spiPort)
 {
-    bool success = mmc_io.begin(userCSPin);
+    bool success = mmc_io.begin(userCSPin, spiPort);
+    if (!success)
+    {
+        SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::SPI_INITIALIZATION_ERROR);
+        return false;
+    }
+    return isConnected();
+}
+
+bool SFE_MMC5983MA::begin(uint8_t userCSPin, SPISettings userSettings, SPIClass &spiPort)
+{
+    bool success = mmc_io.begin(userCSPin, userSettings, spiPort);
     if (!success)
     {
         SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::SPI_INITIALIZATION_ERROR);
