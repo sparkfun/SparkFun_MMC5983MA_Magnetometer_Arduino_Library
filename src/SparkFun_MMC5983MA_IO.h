@@ -22,51 +22,59 @@
 class SFE_MMC5983MA_IO
 {
 private:
-    SPIClass* _spiPort = nullptr;
-    uint8_t _csPin = 0;
-    TwoWire *_i2cPort = nullptr;
-    uint8_t _address = 0;
-    bool useSPI = false;
+  SPIClass *_spiPort = nullptr;
+  uint8_t _csPin = 0;
+  SPISettings _mmcSpiSettings;
+
+  TwoWire *_i2cPort = nullptr;
+  uint8_t _address = 0;
+  bool useSPI = false;
 
 public:
-    // Default empty constructor.
-    SFE_MMC5983MA_IO() = default;
+  // Default empty constructor.
+  SFE_MMC5983MA_IO() = default;
 
-    // Default empty destructor
-    ~SFE_MMC5983MA_IO() = default;
+  // Default empty destructor
+  ~SFE_MMC5983MA_IO() = default;
 
-    // Configures and starts the I2C I/O layer.
-    bool begin(TwoWire &wirePort);
+  // Builds default SPI settings if none are provided.
+  void initSPISettings();
 
-    // Configures and starts the SPI I/O layer.
-    bool begin(const uint8_t csPin, SPIClass& spiPort = SPI);
+  // Configures and starts the I2C I/O layer.
+  bool begin(TwoWire &wirePort);
 
-    // Returns true if we get the correct product ID from the device.
-    bool isConnected();
+  // Configures and starts the SPI I/O layer.
+  bool begin(const uint8_t csPin, SPIClass &spiPort = SPI);
 
-    // Read a single uint8_t from a register.
-    uint8_t readSingleByte(const uint8_t registerAddress);
+  // Configures the SPI I/O layer with the given chip select and SPI settings provided by the user.
+  bool begin(const uint8_t csPin, SPISettings userSettings, SPIClass &spiPort = SPI);
 
-    // Writes a single uint8_t into a register.
-    void writeSingleByte(const uint8_t registerAddress, const uint8_t value);
+  // Returns true if we get the correct product ID from the device.
+  bool isConnected();
 
-    // Reads multiple bytes from a register into buffer uint8_t array.
-    void readMultipleBytes(const uint8_t registerAddress, uint8_t* const buffer , const uint8_t packetLength);
+  // Read a single uint8_t from a register.
+  uint8_t readSingleByte(const uint8_t registerAddress);
 
-    // Writes multiple bytes to register from buffer uint8_t array.
-    void writeMultipleBytes(const uint8_t registerAddress, uint8_t* const buffer, const uint8_t packetLength);
+  // Writes a single uint8_t into a register.
+  void writeSingleByte(const uint8_t registerAddress, const uint8_t value);
 
-    // Sets a single bit in a specific register. Bit position ranges from 0 (lsb) to 7 (msb).
-    void setRegisterBit(const uint8_t registerAddress, const uint8_t bitMask);
+  // Reads multiple bytes from a register into buffer uint8_t array.
+  void readMultipleBytes(const uint8_t registerAddress, uint8_t *const buffer, const uint8_t packetLength);
 
-    // Clears a single bit in a specific register. Bit position ranges from 0 (lsb) to 7 (msb).
-    void clearRegisterBit(const uint8_t registerAddress, const uint8_t bitMask);
+  // Writes multiple bytes to register from buffer uint8_t array.
+  void writeMultipleBytes(const uint8_t registerAddress, uint8_t *const buffer, const uint8_t packetLength);
 
-    // Returns true if a specific bit is set in a register. Bit position ranges from 0 (lsb) to 7 (msb).
-    bool isBitSet(const uint8_t  registerAddress, const uint8_t bitMask);
+  // Sets a single bit in a specific register. Bit position ranges from 0 (lsb) to 7 (msb).
+  void setRegisterBit(const uint8_t registerAddress, const uint8_t bitMask);
 
-    // Returns true if the interface in use is SPI
-    bool spiInUse();
+  // Clears a single bit in a specific register. Bit position ranges from 0 (lsb) to 7 (msb).
+  void clearRegisterBit(const uint8_t registerAddress, const uint8_t bitMask);
+
+  // Returns true if a specific bit is set in a register. Bit position ranges from 0 (lsb) to 7 (msb).
+  bool isBitSet(const uint8_t registerAddress, const uint8_t bitMask);
+
+  // Returns true if the interface in use is SPI
+  bool spiInUse();
 };
 
 #endif

@@ -25,6 +25,13 @@ bool SFE_MMC5983MA_IO::begin(TwoWire &i2cPort)
     return isConnected();
 }
 
+void SFE_MMC5983MA_IO::initSPISettings()
+{
+    // CPOL = 1, CPHA = 1 : SPI Mode 3 according to datasheet
+    //  In practice SPI_MODE0 is what worked.
+    _mmcSpiSettings = SPISettings(2000000, MSBFIRST, SPI_MODE0);
+}
+
 bool SFE_MMC5983MA_IO::begin(const uint8_t csPin, SPIClass &spiPort)
 {
     useSPI = true;
@@ -32,6 +39,22 @@ bool SFE_MMC5983MA_IO::begin(const uint8_t csPin, SPIClass &spiPort)
     digitalWrite(_csPin, HIGH);
     pinMode(_csPin, OUTPUT);
     _spiPort = &spiPort;
+
+    initSPISettings();
+
+    return isConnected();
+}
+
+bool SFE_MMC5983MA_IO::begin(const uint8_t csPin, SPISettings userSettings, SPIClass &spiPort)
+{
+    useSPI = true;
+    _csPin = csPin;
+    digitalWrite(_csPin, HIGH);
+    pinMode(_csPin, OUTPUT);
+    _spiPort = &spiPort;
+
+    _mmcSpiSettings = userSettings;
+
     return isConnected();
 }
 
@@ -40,10 +63,12 @@ bool SFE_MMC5983MA_IO::isConnected()
     bool result = false;
     if (useSPI)
     {
+        _spiPort->beginTransaction(_mmcSpiSettings);
         digitalWrite(_csPin, LOW);
         _spiPort->transfer(READ_REG(PROD_ID_REG));
         uint8_t readback = _spiPort->transfer(DUMMY);
         digitalWrite(_csPin, HIGH);
+        _spiPort->endTransaction();
         result = (readback == PROD_ID);
     }
     else
@@ -59,10 +84,12 @@ void SFE_MMC5983MA_IO::writeMultipleBytes(const uint8_t registerAddress, uint8_t
 {
     if (useSPI)
     {
+        _spiPort->beginTransaction(_mmcSpiSettings);
         digitalWrite(_csPin, LOW);
         _spiPort->transfer(registerAddress);
         _spiPort->transfer(buffer, packetLength);
         digitalWrite(_csPin, HIGH);
+        _spiPort->endTransaction();
     }
     else
     {
@@ -79,10 +106,12 @@ void SFE_MMC5983MA_IO::readMultipleBytes(const uint8_t registerAddress, uint8_t 
 {
     if (useSPI)
     {
+        _spiPort->beginTransaction(_mmcSpiSettings);
         digitalWrite(_csPin, LOW);
         _spiPort->transfer(READ_REG(registerAddress));
         _spiPort->transfer(buffer, packetLength);
         digitalWrite(_csPin, HIGH);
+        _spiPort->endTransaction();
     }
     else
     {
@@ -101,10 +130,12 @@ uint8_t SFE_MMC5983MA_IO::readSingleByte(const uint8_t registerAddress)
     uint8_t result = 0;
     if (useSPI)
     {
+        _spiPort->beginTransaction(_mmcSpiSettings);
         digitalWrite(_csPin, LOW);
         _spiPort->transfer(READ_REG(registerAddress));
         result = _spiPort->transfer(DUMMY);
         digitalWrite(_csPin, HIGH);
+        _spiPort->endTransaction();
     }
     else
     {
@@ -121,10 +152,12 @@ void SFE_MMC5983MA_IO::writeSingleByte(const uint8_t registerAddress, const uint
 {
     if (useSPI)
     {
+        _spiPort->beginTransaction(_mmcSpiSettings);
         digitalWrite(_csPin, LOW);
         _spiPort->transfer(registerAddress);
         _spiPort->transfer(value);
         digitalWrite(_csPin, HIGH);
+        _spiPort->endTransaction();
     }
     else
     {
