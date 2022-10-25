@@ -61,6 +61,9 @@ public:
   // Sets the error callback function.
   void setErrorCallback(void (*errorCallback)(SF_MMC5983MA_ERROR errorCode));
 
+  // Convert errorCode to text
+  const char *errorCodeString(SF_MMC5983MA_ERROR errorCode);
+  
   // Initializes MMC5983MA using I2C
   bool begin(TwoWire &wirePort = Wire);
 

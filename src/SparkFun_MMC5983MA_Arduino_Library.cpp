@@ -140,6 +140,28 @@ void SFE_MMC5983MA::setErrorCallback(void (*_errorCallback)(SF_MMC5983MA_ERROR e
     errorCallback = _errorCallback;
 }
 
+const char *SFE_MMC5983MA::errorCodeString(SF_MMC5983MA_ERROR errorCode)
+{
+  switch (errorCode)
+  {
+  case SF_MMC5983MA_ERROR::NONE:
+    return "NONE";
+    break;
+  case SF_MMC5983MA_ERROR::I2C_INITIALIZATION_ERROR:
+    return "I2C_INITIALIZATION_ERROR";
+    break;
+  case SF_MMC5983MA_ERROR::SPI_INITIALIZATION_ERROR:
+    return "SPI_INITIALIZATION_ERROR";
+    break;
+  case SF_MMC5983MA_ERROR::INVALID_DEVICE:
+    return "INVALID_DEVICE";
+    break;
+  default:
+    return "UNDEFINED";
+    break;
+  }
+};
+
 bool SFE_MMC5983MA::begin(TwoWire &wirePort)
 {
     // Initializes I2C and check if device responds

@@ -13,6 +13,7 @@ SFE_MMC5983MA	KEYWORD1
 #######################################
 
 setErrorCallback	KEYWORD2
+errorCodeString	KEYWORD2
 begin	KEYWORD2
 isConnected	KEYWORD2
 getTemperature	KEYWORD2
