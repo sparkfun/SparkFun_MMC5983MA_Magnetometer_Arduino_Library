@@ -163,6 +163,15 @@ const char *SFE_MMC5983MA::errorCodeString(SF_MMC5983MA_ERROR errorCode)
   case SF_MMC5983MA_ERROR::BUS_ERROR:
     return "BUS_ERROR";
     break;
+  case SF_MMC5983MA_ERROR::INVALID_FILTER_BANDWIDTH:
+    return "INVALID_FILTER_BANDWIDTH";
+    break;    
+  case SF_MMC5983MA_ERROR::INVALID_CONTINUOUS_FREQUENCY:
+    return "INVALID_CONTINUOUS_FREQUENCY";
+    break;
+  case SF_MMC5983MA_ERROR::INVALID_PERIODIC_SAMPLES:
+    return "INVALID_PERIODIC_SAMPLES";
+    break;
   default:
     return "UNDEFINED";
     break;
@@ -210,7 +219,12 @@ bool SFE_MMC5983MA::isConnected()
     uint8_t response = 0;
     bool success = mmc_io.readSingleByte(PROD_ID_REG, &response);
 
-    if ((!success) || (response != PROD_ID))
+    if (!success)
+    {
+        SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::BUS_ERROR);
+        return false;
+    }
+    if (response != PROD_ID)
     {
         SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::INVALID_DEVICE);
         return false;
@@ -301,7 +315,7 @@ bool SFE_MMC5983MA::is3WireSPIEnabled()
 {
     // Get the bit value from the shadow register since the IC does not
     // allow reading INT_CTRL_3_REG register.
-    return isShadowBitSet(INT_CTRL_3_REG, SPI_3W);
+    return (isShadowBitSet(INT_CTRL_3_REG, SPI_3W));
 }
 
 bool SFE_MMC5983MA::performSetOperation()
@@ -346,7 +360,7 @@ bool SFE_MMC5983MA::isAutomaticSetResetEnabled()
 {
     // Get the bit value from the shadow register since the IC does not
     // allow reading INT_CTRL_0_REG register.
-    return isShadowBitSet(INT_CTRL_0_REG, AUTO_SR_EN);
+    return (isShadowBitSet(INT_CTRL_0_REG, AUTO_SR_EN));
 }
 
 bool SFE_MMC5983MA::enableXChannel()
@@ -371,7 +385,7 @@ bool SFE_MMC5983MA::isXChannelEnabled()
 {
     // Get the bit value from the shadow register since the IC does not
     // allow reading INT_CTRL_1_REG register.
-    return isShadowBitSet(INT_CTRL_1_REG, X_INHIBIT);
+    return (isShadowBitSet(INT_CTRL_1_REG, X_INHIBIT));
 }
 
 bool SFE_MMC5983MA::enableYZChannels()
@@ -396,7 +410,7 @@ bool SFE_MMC5983MA::areYZChannelsEnabled()
 {
     // Get the bit value from the shadow register since the IC does not
     // allow reading INT_CTRL_1_REG register.
-    return isShadowBitSet(INT_CTRL_1_REG, YZ_INHIBIT);
+    return (isShadowBitSet(INT_CTRL_1_REG, YZ_INHIBIT));
 }
 
 bool SFE_MMC5983MA::setFilterBandwidth(uint16_t bandwidth)
@@ -429,10 +443,16 @@ bool SFE_MMC5983MA::setFilterBandwidth(uint16_t bandwidth)
     break;
 
     case 100:
-    default:
     {
         success = clearShadowBit(INT_CTRL_1_REG, BW0);
         success &= clearShadowBit(INT_CTRL_1_REG, BW1);
+    }
+    break;
+
+    default:
+    {
+        SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::INVALID_FILTER_BANDWIDTH);
+        success = false;
     }
     break;
     }
@@ -488,7 +508,7 @@ bool SFE_MMC5983MA::isContinuousModeEnabled()
 {
     // Get the bit value from the shadow register since the IC does not
     // allow reading INT_CTRL_2_REG register.
-    return isShadowBitSet(INT_CTRL_2_REG, CMM_EN);
+    return (isShadowBitSet(INT_CTRL_2_REG, CMM_EN));
 }
 
 bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
@@ -572,8 +592,11 @@ bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
     break;
 
     default:
+    {
+        SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::INVALID_CONTINUOUS_FREQUENCY);
         success = false;
-        break;    
+    }
+    break;
     }
 
     return success;
@@ -658,7 +681,7 @@ bool SFE_MMC5983MA::isPeriodicSetEnabled()
 {
     // Get the bit value from the shadow register since the IC does not
     // allow reading INT_CTRL_2_REG register.
-    return isShadowBitSet(INT_CTRL_2_REG, EN_PRD_SET);
+    return (isShadowBitSet(INT_CTRL_2_REG, EN_PRD_SET));
 }
 
 bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
@@ -743,8 +766,11 @@ bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
     break;
 
     default:
+    {
+        SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::INVALID_PERIODIC_SAMPLES);
         success = false;
-        break;
+    }
+    break;
     }
 
     return success;
@@ -830,7 +856,7 @@ bool SFE_MMC5983MA::isExtraCurrentAppliedPosToNeg()
 {
     // Get the bit value from the shadow register since the IC does not
     // allow reading INT_CTRL_3_REG register.
-    return isShadowBitSet(INT_CTRL_3_REG, ST_ENP);
+    return (isShadowBitSet(INT_CTRL_3_REG, ST_ENP));
 }
 
 bool SFE_MMC5983MA::applyExtracurrentNegToPos()
@@ -851,13 +877,17 @@ bool SFE_MMC5983MA::isExtraCurrentAppliedNegToPos()
 {
     // Get the bit value from the shadow register since the IC does not
     // allow reading INT_CTRL_3_REG register.
-    return isShadowBitSet(INT_CTRL_3_REG, ST_ENM);
+    return (isShadowBitSet(INT_CTRL_3_REG, ST_ENM));
 }
 
 uint32_t SFE_MMC5983MA::getMeasurementX()
 {
     // Send command to device. TM_M self clears so we can access it directly.
-    mmc_io.setRegisterBit(INT_CTRL_0_REG, TM_M);
+    if (!mmc_io.setRegisterBit(INT_CTRL_0_REG, TM_M))
+    {
+        SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::BUS_ERROR);
+        return 0;
+    }
 
     // Wait until measurement is completed
     do
@@ -871,7 +901,7 @@ uint32_t SFE_MMC5983MA::getMeasurementX()
     uint8_t buffer2bit = 0;
 
     mmc_io.readMultipleBytes(X_OUT_0_REG, buffer, 2);
-    mmc_io.readMultipleBytes(XYZ_OUT_2_REG, &buffer2bit, 1);
+    mmc_io.readSingleByte(XYZ_OUT_2_REG, &buffer2bit);
 
     result = buffer[0]; // out[17:10]
     result = (result << 8) | buffer[1]; // out[9:2]
@@ -883,7 +913,11 @@ uint32_t SFE_MMC5983MA::getMeasurementX()
 uint32_t SFE_MMC5983MA::getMeasurementY()
 {
     // Send command to device. TM_M self clears so we can access it directly.
-    mmc_io.setRegisterBit(INT_CTRL_0_REG, TM_M);
+    if (!mmc_io.setRegisterBit(INT_CTRL_0_REG, TM_M))
+    {
+        SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::BUS_ERROR);
+        return 0;
+    }
 
     // Wait until measurement is completed
     do
@@ -897,7 +931,7 @@ uint32_t SFE_MMC5983MA::getMeasurementY()
     uint8_t buffer2bit = 0;
 
     mmc_io.readMultipleBytes(Y_OUT_0_REG, buffer, 2);
-    mmc_io.readMultipleBytes(XYZ_OUT_2_REG, &buffer2bit, 1);
+    mmc_io.readSingleByte(XYZ_OUT_2_REG, &buffer2bit);
 
     result = buffer[0]; // out[17:10]
     result = (result << 8) | buffer[1]; // out[9:2]
@@ -909,7 +943,11 @@ uint32_t SFE_MMC5983MA::getMeasurementY()
 uint32_t SFE_MMC5983MA::getMeasurementZ()
 {
     // Send command to device. TM_M self clears so we can access it directly.
-    mmc_io.setRegisterBit(INT_CTRL_0_REG, TM_M);
+    if (!mmc_io.setRegisterBit(INT_CTRL_0_REG, TM_M))
+    {
+        SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::BUS_ERROR);
+        return 0;
+    }
 
     // Wait until measurement is completed
     do
@@ -936,7 +974,10 @@ bool SFE_MMC5983MA::getMeasurementXYZ(uint32_t *x, uint32_t *y, uint32_t *z)
     bool success = mmc_io.setRegisterBit(INT_CTRL_0_REG, TM_M);
 
     if (!success)
+    {
+        SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::BUS_ERROR);
         return false;
+    }
 
     // Wait until measurement is completed
     do
@@ -945,9 +986,14 @@ bool SFE_MMC5983MA::getMeasurementXYZ(uint32_t *x, uint32_t *y, uint32_t *z)
         delay(1);
     } while (!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE));
 
+    return (readFieldsXYZ(x, y, z));
+}
+
+bool SFE_MMC5983MA::readFieldsXYZ(uint32_t *x, uint32_t *y, uint32_t *z)
+{
     uint8_t registerValues[7] = {0};
 
-    success &= (mmc_io.readMultipleBytes(X_OUT_0_REG, registerValues, 7));
+    bool success = (mmc_io.readMultipleBytes(X_OUT_0_REG, registerValues, 7));
 
     if (success)
     {
@@ -961,6 +1007,16 @@ bool SFE_MMC5983MA::getMeasurementXYZ(uint32_t *x, uint32_t *y, uint32_t *z)
         *z = (*z << 8) | registerValues[5]; // Zout[9:2]
         *z = (*z << 2) | ((registerValues[6] >> 2) & 0x03); // Zout[1:0]
     }
+    else
+    {
+        SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::BUS_ERROR);
+    }
 
     return success;
+}
+
+bool SFE_MMC5983MA::clearMeasDoneInterrupt(uint8_t measMask)
+{
+    measMask &= (MEAS_T_DONE | MEAS_M_DONE); // Ensure only the Meas_T_Done and Meas_M_Done interrupts can be cleared
+    return (mmc_io.setRegisterBit(STATUS_REG, measMask)); // Writing 1 into these bits will clear the corresponding interrupt
 }
