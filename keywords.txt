@@ -13,6 +13,7 @@ SFE_MMC5983MA	KEYWORD1
 #######################################
 
 setErrorCallback	KEYWORD2
+errorCodeString	KEYWORD2
 begin	KEYWORD2
 isConnected	KEYWORD2
 getTemperature	KEYWORD2
@@ -55,8 +56,20 @@ isExtraCurrentAppliedNegToPos	KEYWORD2
 getMeasurementX	KEYWORD2
 getMeasurementY	KEYWORD2
 getMeasurementZ	KEYWORD2
+getMeasurementXYZ	KEYWORD2
+readFieldsXYZ	KEYWORD2
+clearMeasDoneInterrupt	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
 #######################################
+
+NONE	LITERAL1
+I2C_INITIALIZATION_ERROR	LITERAL1
+SPI_INITIALIZATION_ERROR	LITERAL1
+INVALID_DEVICE	LITERAL1
+BUS_ERROR	LITERAL1
+INVALID_FILTER_BANDWIDTH	LITERAL1
+INVALID_CONTINUOUS_FREQUENCY	LITERAL1
+INVALID_PERIODIC_SAMPLES	LITERAL1
 

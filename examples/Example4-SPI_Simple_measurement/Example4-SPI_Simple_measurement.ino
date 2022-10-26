@@ -53,16 +53,21 @@ void setup()
 
 void loop()
 {
-    unsigned int currentX = 0;
-    unsigned int currentY = 0;
-    unsigned int currentZ = 0;
+    uint32_t currentX = 0;
+    uint32_t currentY = 0;
+    uint32_t currentZ = 0;
     double normalizedX = 0;
     double normalizedY = 0;
     double normalizedZ = 0;
 
+    // This reads the X, Y and Z channels consecutively
+    // (Useful if you have one or more channels disabled)
     currentX = myMag.getMeasurementX();
     currentY = myMag.getMeasurementY();
     currentZ = myMag.getMeasurementZ();
+
+    // Or, we could read all three simultaneously
+    //myMag.getMeasurementXYZ(&currentX, &currentY, &currentZ);
 
     Serial.print("X axis raw value: ");
     Serial.print(currentX);
@@ -71,6 +76,8 @@ void loop()
     Serial.print("\tZ axis raw value: ");
     Serial.println(currentZ);
 
+    // The magnetic field values are 18-bit unsigned. The zero (mid) point is 2^17 (131072).
+    // Normalize each field to +/- 1.0
     normalizedX = (double)currentX - 131072.0;
     normalizedX /= 131072.0;
     normalizedY = (double)currentY - 131072.0;
@@ -78,8 +85,10 @@ void loop()
     normalizedZ = (double)currentZ - 131072.0;
     normalizedZ /= 131072.0;
 
+    // The magnetometer full scale is +/- 8 Gauss
+    // Multiply the normalized values by 8 to convert to Gauss
     Serial.print("X axis field (Gauss): ");
-    Serial.print(normalizedX * 8, 5);
+    Serial.print(normalizedX * 8, 5); // Print with 5 decimal places
 
     Serial.print("\tY axis field (Gauss): ");
     Serial.print(normalizedY * 8, 5);

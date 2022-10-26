@@ -60,7 +60,7 @@ bool SFE_MMC5983MA_IO::begin(const uint8_t csPin, SPISettings userSettings, SPIC
 
 bool SFE_MMC5983MA_IO::isConnected()
 {
-    bool result = false;
+    bool result;
     if (useSPI)
     {
         _spiPort->beginTransaction(_mmcSpiSettings);
@@ -74,14 +74,20 @@ bool SFE_MMC5983MA_IO::isConnected()
     else
     {
         _i2cPort->beginTransmission(I2C_ADDR);
-        if (_i2cPort->endTransmission() == 0)
-            result = readSingleByte(PROD_ID_REG) == PROD_ID;
+        result = (_i2cPort->endTransmission() == 0);
+        if (result)
+        {
+            uint8_t id = 0;
+            result &= readSingleByte(PROD_ID_REG, &id);
+            result &= id == PROD_ID;
+        }
     }
     return result;
 }
 
-void SFE_MMC5983MA_IO::writeMultipleBytes(const uint8_t registerAddress, uint8_t *const buffer, uint8_t const packetLength)
+bool SFE_MMC5983MA_IO::writeMultipleBytes(const uint8_t registerAddress, uint8_t *const buffer, uint8_t const packetLength)
 {
+    bool success = true;
     if (useSPI)
     {
         _spiPort->beginTransaction(_mmcSpiSettings);
@@ -97,13 +103,14 @@ void SFE_MMC5983MA_IO::writeMultipleBytes(const uint8_t registerAddress, uint8_t
         _i2cPort->write(registerAddress);
         for (uint8_t i = 0; i < packetLength; i++)
             _i2cPort->write(buffer[i]);
-
-        _i2cPort->endTransmission();
+        success = _i2cPort->endTransmission() == 0;
     }
+    return success;
 }
 
-void SFE_MMC5983MA_IO::readMultipleBytes(const uint8_t registerAddress, uint8_t *const buffer, const uint8_t packetLength)
+bool SFE_MMC5983MA_IO::readMultipleBytes(const uint8_t registerAddress, uint8_t *const buffer, const uint8_t packetLength)
 {
+    bool success = true;
     if (useSPI)
     {
         _spiPort->beginTransaction(_mmcSpiSettings);
@@ -117,23 +124,25 @@ void SFE_MMC5983MA_IO::readMultipleBytes(const uint8_t registerAddress, uint8_t 
     {
         _i2cPort->beginTransmission(I2C_ADDR);
         _i2cPort->write(registerAddress);
-        _i2cPort->endTransmission();
+        success = _i2cPort->endTransmission() == 0;
 
-        _i2cPort->requestFrom(I2C_ADDR, packetLength);
-        for (uint8_t i = 0; (i < packetLength); i++)
+        uint8_t returned = _i2cPort->requestFrom(I2C_ADDR, packetLength);
+        for (uint8_t i = 0; (i < packetLength) && (i < returned); i++)
             buffer[i] = _i2cPort->read();
+        success &= returned == packetLength;
     }
+    return success;
 }
 
-uint8_t SFE_MMC5983MA_IO::readSingleByte(const uint8_t registerAddress)
+bool SFE_MMC5983MA_IO::readSingleByte(const uint8_t registerAddress, uint8_t *buffer)
 {
-    uint8_t result = 0;
+    bool success = true;
     if (useSPI)
     {
         _spiPort->beginTransaction(_mmcSpiSettings);
         digitalWrite(_csPin, LOW);
         _spiPort->transfer(READ_REG(registerAddress));
-        result = _spiPort->transfer(DUMMY);
+        *buffer = _spiPort->transfer(DUMMY);
         digitalWrite(_csPin, HIGH);
         _spiPort->endTransaction();
     }
@@ -141,15 +150,19 @@ uint8_t SFE_MMC5983MA_IO::readSingleByte(const uint8_t registerAddress)
     {
         _i2cPort->beginTransmission(I2C_ADDR);
         _i2cPort->write(registerAddress);
-        _i2cPort->endTransmission();
-        _i2cPort->requestFrom(I2C_ADDR, 1U);
-        result = _i2cPort->read();
+        success = _i2cPort->endTransmission() == 0;
+        
+        uint8_t returned = _i2cPort->requestFrom(I2C_ADDR, 1U);
+        if (returned == 1)
+            *buffer = _i2cPort->read();
+        success &= returned == 1;
     }
-    return result;
+    return success;
 }
 
-void SFE_MMC5983MA_IO::writeSingleByte(const uint8_t registerAddress, const uint8_t value)
+bool SFE_MMC5983MA_IO::writeSingleByte(const uint8_t registerAddress, const uint8_t value)
 {
+    bool success = true;
     if (useSPI)
     {
         _spiPort->beginTransaction(_mmcSpiSettings);
@@ -164,27 +177,33 @@ void SFE_MMC5983MA_IO::writeSingleByte(const uint8_t registerAddress, const uint
         _i2cPort->beginTransmission(I2C_ADDR);
         _i2cPort->write(registerAddress);
         _i2cPort->write(value);
-        _i2cPort->endTransmission();
+        success = _i2cPort->endTransmission() == 0;
     }
+    return success;
 }
 
-void SFE_MMC5983MA_IO::setRegisterBit(const uint8_t registerAddress, const uint8_t bitMask)
+bool SFE_MMC5983MA_IO::setRegisterBit(const uint8_t registerAddress, const uint8_t bitMask)
 {
-    uint8_t value = readSingleByte(registerAddress);
+    uint8_t value = 0;
+    bool success = readSingleByte(registerAddress, &value);
     value |= bitMask;
-    writeSingleByte(registerAddress, value);
+    success &= writeSingleByte(registerAddress, value);
+    return success;
 }
 
-void SFE_MMC5983MA_IO::clearRegisterBit(const uint8_t registerAddress, const uint8_t bitMask)
+bool SFE_MMC5983MA_IO::clearRegisterBit(const uint8_t registerAddress, const uint8_t bitMask)
 {
-    uint8_t value = readSingleByte(registerAddress);
+    uint8_t value = 0;
+    bool success = readSingleByte(registerAddress, &value);
     value &= ~bitMask;
-    writeSingleByte(registerAddress, value);
+    success &= writeSingleByte(registerAddress, value);
+    return success;
 }
 
 bool SFE_MMC5983MA_IO::isBitSet(const uint8_t registerAddress, const uint8_t bitMask)
 {
-    uint8_t value = readSingleByte(registerAddress);
+    uint8_t value = 0;
+    readSingleByte(registerAddress, &value);
     return (value & bitMask);
 }
 
