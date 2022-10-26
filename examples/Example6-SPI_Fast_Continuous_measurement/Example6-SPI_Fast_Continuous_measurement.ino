@@ -1,5 +1,5 @@
 /*
-  Fast, interrupt driven heading calculation using the MMC5983MA magnetometer.
+  Compute magnetic heading over SPI from the MMC5983MA
   By: Nathan Seidle and Ricardo Ramos
   SparkFun Electronics
   Date: April 14th, 2022
@@ -8,20 +8,20 @@
   Feel like supporting our work? Buy a board from SparkFun!
   https://www.sparkfun.com/products/19034
 
-  This example demonstrates how to use interrupts to quickly read the sensor instead of polling.
+  This example demonstrates how to compute a magnetic heading from the sensor over SPI
 
   Hardware Connections:
-  Solder a wire from the INT pin and wire it to pin 2 on a RedBoard
-  Plug a Qwiic cable into the sensor and a RedBoard
-  If you don't have a platform with a Qwiic connection use the SparkFun Qwiic Breadboard Jumper
-  (https://www.sparkfun.com/products/17912) Open the serial monitor at 115200 baud to see the output
+  Connect CIPO to MISO, COPI to MOSI, and SCK to SCK, on an Arduino.
+  Connect CS to pin 4 on an Arduino.
 */
 
-#include <Wire.h>
+#include <SPI.h>
 
 #include <SparkFun_MMC5983MA_Arduino_Library.h> //Click here to get the library: http://librarymanager/All#SparkFun_MMC5983MA
 
 SFE_MMC5983MA myMag;
+
+int csPin = 4;
 
 int interruptPin = 2;
 
@@ -39,13 +39,13 @@ void setup()
     Serial.begin(115200);
     Serial.println("MMC5983MA Example");
 
-    Wire.begin();
+    SPI.begin();
 
     // Configure the interrupt pin for the "Measurement Done" interrupt
     pinMode(interruptPin, INPUT);
     attachInterrupt(digitalPinToInterrupt(interruptPin), interruptRoutine, RISING);
 
-    if (myMag.begin() == false)
+    if (myMag.begin(csPin) == false)
     {
         Serial.println("MMC5983MA did not respond - check your wiring. Freezing.");
         while (true)
@@ -56,13 +56,13 @@ void setup()
 
     Serial.println("MMC5983MA connected");
 
-    Serial.println("Setting filter bandwith to 100 Hz for continuous operation...");
-    myMag.setFilterBandwidth(100);
+    Serial.println("Setting filter bandwith to 800 Hz for continuous operation...");
+    myMag.setFilterBandwidth(800);
     Serial.print("Reading back filter bandwith: ");
     Serial.println(myMag.getFilterBandwith());
 
-    Serial.println("Setting continuous measurement frequency to 10 Hz...");
-    myMag.setContinuousModeFrequency(10);
+    Serial.println("Setting continuous measurement frequency to 100 Hz...");
+    myMag.setContinuousModeFrequency(100);
     Serial.print("Reading back continuous measurement frequency: ");
     Serial.println(myMag.getContinuousModeFrequency());
 

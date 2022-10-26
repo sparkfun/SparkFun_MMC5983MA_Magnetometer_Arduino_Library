@@ -43,52 +43,39 @@ void setup()
 
 void loop()
 {
-    unsigned int rawValue = 0;
-    double heading = 0;
+    uint32_t rawValueX = 0;
+    uint32_t rawValueY = 0;
+    uint32_t rawValueZ = 0;
     double normalizedX = 0;
     double normalizedY = 0;
     double normalizedZ = 0;
+    double heading = 0;
 
-    rawValue = myMag.getMeasurementX();
-    normalizedX = (double)rawValue - 131072.0;
+    // Read all three channels simultaneously
+    myMag.getMeasurementXYZ(&rawValueX, &rawValueY, &rawValueZ);
+
+    // The magnetic field values are 18-bit unsigned. The zero (mid) point is 2^17 (131072).
+    // Normalize each field to +/- 1.0
+    normalizedX = (double)rawValueX - 131072.0;
     normalizedX /= 131072.0;
 
-    rawValue = myMag.getMeasurementY();
-    normalizedY = (double)rawValue - 131072.0;
+    normalizedY = (double)rawValueY - 131072.0;
     normalizedY /= 131072.0;
 
-    rawValue = myMag.getMeasurementZ();
-    normalizedZ = (double)rawValue - 131072.0;
+    normalizedZ = (double)rawValueZ - 131072.0;
     normalizedZ /= 131072.0;
 
     // Magnetic north is oriented with the Y axis
-    if (normalizedY != 0)
-    {
-        if (normalizedX < 0)
-        {
-            if (normalizedY > 0)
-                heading = 57.2958 * atan(-normalizedX / normalizedY); // Quadrant 1
-            else
-                heading = 57.2958 * atan(-normalizedX / normalizedY) + 180; // Quadrant 2
-        }
-        else
-        {
-            if (normalizedY < 0)
-                heading = 57.2958 * atan(-normalizedX / normalizedY) + 180; // Quadrant 3
-            else
-                heading = 360 - (57.2958 * atan(normalizedX / normalizedY)); // Quadrant 4
-        }
-    }
-    else
-    {
-        // atan of an infinite number is 90 or 270 degrees depending on X value
-        if (normalizedX > 0)
-            heading = 270;
-        else
-            heading = 90;
-    }
+    // Convert the X and Y fields into heading using atan2 (Arc Tangent 2)
+    heading = atan2(normalizedX, 0 - normalizedY);
+
+    // atan2 returns a value between +PI and -PI
+    // Convert to degrees
+    heading /= PI;
+    heading *= 180;
+    heading += 180;
 
     Serial.print("Heading: ");
     Serial.println(heading, 1);
-    delay(10);
+    delay(100);
 }
