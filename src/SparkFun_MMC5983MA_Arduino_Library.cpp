@@ -333,11 +333,15 @@ bool SFE_MMC5983MA::is3WireSPIEnabled()
 
 bool SFE_MMC5983MA::performSetOperation()
 {
-    // Since SET bit clears itself we don't need to to through the shadow
-    // register for this - we can send the command directly to the IC.
-    bool success = mmc_io.setRegisterBit(INT_CTRL_0_REG, SET_OPERATION);
+    // Set the SET bit to perform a set operation.
+    // Do this using the shadow register. If we do it with setRegisterBit
+    // (read-modify-write) we end up setting the Auto_SR_en bit too as that
+    // always seems to read as 1...? I don't know why.
+    bool success = setShadowBit(INT_CTRL_0_REG, SET_OPERATION);
 
-    // Wait until bit clears itself.
+    clearShadowBit(INT_CTRL_0_REG, SET_OPERATION, false); // Clear the bit - in shadow memory only
+
+    // Wait for the set operation to complete (500ns).
     delay(1);
 
     return success;
@@ -345,11 +349,15 @@ bool SFE_MMC5983MA::performSetOperation()
 
 bool SFE_MMC5983MA::performResetOperation()
 {
-    // Since RESET bit clears itself we don't need to to through the shadow
-    // register for this - we can send the command directly to the IC.
-    bool success = mmc_io.setRegisterBit(INT_CTRL_0_REG, RESET_OPERATION);
+    // Set the RESET bit to perform a reset operation.
+    // Do this using the shadow register. If we do it with setRegisterBit
+    // (read-modify-write) we end up setting the Auto_SR_en bit too as that
+    // always seems to read as 1...? I don't know why.
+    bool success = setShadowBit(INT_CTRL_0_REG, RESET_OPERATION);
 
-    // Wait until bit clears itself.
+    clearShadowBit(INT_CTRL_0_REG, RESET_OPERATION, false); // Clear the bit - in shadow memory only
+
+    // Wait for the reset operation to complete (500ns).
     delay(1);
 
     return success;
