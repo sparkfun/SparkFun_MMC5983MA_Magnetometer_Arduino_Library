@@ -903,9 +903,13 @@ bool SFE_MMC5983MA::isExtraCurrentAppliedNegToPos()
 
 uint32_t SFE_MMC5983MA::getMeasurementX()
 {
-    // Send command to device. TM_M self clears so we can access it directly.
-    if (!mmc_io.setRegisterBit(INT_CTRL_0_REG, TM_M))
+    // Set the TM_M bit to start the measurement.
+    // Do this using the shadow register. If we do it with setRegisterBit
+    // (read-modify-write) we end up setting the Auto_SR_en bit too as that
+    // always seems to read as 1...? I don't know why.
+    if (!setShadowBit(INT_CTRL_0_REG, TM_M))
     {
+        clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
         SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::BUS_ERROR);
         return 0;
     }
@@ -916,6 +920,8 @@ uint32_t SFE_MMC5983MA::getMeasurementX()
         // Wait a little so we won't flood MMC with requests
         delay(1);
     } while (!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE));
+
+    clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
 
     uint32_t result = 0;
     uint8_t buffer[2] = {0};
@@ -933,9 +939,13 @@ uint32_t SFE_MMC5983MA::getMeasurementX()
 
 uint32_t SFE_MMC5983MA::getMeasurementY()
 {
-    // Send command to device. TM_M self clears so we can access it directly.
-    if (!mmc_io.setRegisterBit(INT_CTRL_0_REG, TM_M))
+    // Set the TM_M bit to start the measurement.
+    // Do this using the shadow register. If we do it with setRegisterBit
+    // (read-modify-write) we end up setting the Auto_SR_en bit too as that
+    // always seems to read as 1...? I don't know why.
+    if (!setShadowBit(INT_CTRL_0_REG, TM_M))
     {
+        clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
         SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::BUS_ERROR);
         return 0;
     }
@@ -946,6 +956,8 @@ uint32_t SFE_MMC5983MA::getMeasurementY()
         // Wait a little so we won't flood MMC with requests
         delay(1);
     } while (!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE));
+
+    clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
 
     uint32_t result = 0;
     uint8_t buffer[2] = {0};
@@ -963,9 +975,13 @@ uint32_t SFE_MMC5983MA::getMeasurementY()
 
 uint32_t SFE_MMC5983MA::getMeasurementZ()
 {
-    // Send command to device. TM_M self clears so we can access it directly.
-    if (!mmc_io.setRegisterBit(INT_CTRL_0_REG, TM_M))
+    // Set the TM_M bit to start the measurement.
+    // Do this using the shadow register. If we do it with setRegisterBit
+    // (read-modify-write) we end up setting the Auto_SR_en bit too as that
+    // always seems to read as 1...? I don't know why.
+    if (!setShadowBit(INT_CTRL_0_REG, TM_M))
     {
+        clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
         SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::BUS_ERROR);
         return 0;
     }
@@ -976,6 +992,8 @@ uint32_t SFE_MMC5983MA::getMeasurementZ()
         // Wait a little so we won't flood MMC with requests
         delay(1);
     } while (!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE));
+
+    clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
 
     uint32_t result = 0;
     uint8_t buffer[3] = {0};
@@ -991,11 +1009,15 @@ uint32_t SFE_MMC5983MA::getMeasurementZ()
 
 bool SFE_MMC5983MA::getMeasurementXYZ(uint32_t *x, uint32_t *y, uint32_t *z)
 {
-    // Send command to device. TM_M self clears so we can access it directly.
-    bool success = mmc_io.setRegisterBit(INT_CTRL_0_REG, TM_M);
+    // Set the TM_M bit to start the measurement.
+    // Do this using the shadow register. If we do it with setRegisterBit
+    // (read-modify-write) we end up setting the Auto_SR_en bit too as that
+    // always seems to read as 1...? I don't know why.
+    bool success = setShadowBit(INT_CTRL_0_REG, TM_M);
 
     if (!success)
     {
+        clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
         SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::BUS_ERROR);
         return false;
     }
@@ -1006,6 +1028,8 @@ bool SFE_MMC5983MA::getMeasurementXYZ(uint32_t *x, uint32_t *y, uint32_t *z)
         // Wait a little so we won't flood MMC with requests
         delay(1);
     } while (!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE));
+
+    clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
 
     return (readFieldsXYZ(x, y, z));
 }
