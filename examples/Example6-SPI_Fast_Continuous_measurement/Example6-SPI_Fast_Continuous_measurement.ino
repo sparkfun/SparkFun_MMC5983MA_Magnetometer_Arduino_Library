@@ -45,11 +45,12 @@ void setup()
     pinMode(interruptPin, INPUT);
     attachInterrupt(digitalPinToInterrupt(interruptPin), interruptRoutine, RISING);
 
-    if (myMag.begin(csPin) == false)
+    while (myMag.begin(csPin) == false)
     {
-        Serial.println("MMC5983MA did not respond - check your wiring. Freezing.");
-        while (true)
-            ;
+        Serial.println("MMC5983MA did not respond. Retrying...");
+        delay(500);
+        myMag.softReset();
+        delay(500);
     }
 
     myMag.softReset();
