@@ -275,9 +275,13 @@ int SFE_MMC5983MA::getTemperature()
 
 bool SFE_MMC5983MA::softReset()
 {
-    // Since SW_RST bit clears itself we don't need to to through the shadow
-    // register for this - we can send the command directly to the IC.
-    bool success = mmc_io.setRegisterBit(INT_CTRL_1_REG, SW_RST);
+    // Set the SW_RST bit to perform a software reset.
+    // Do this using the shadow register. If we do it with setRegisterBit
+    // (read-modify-write) we end up setting the reserved and BW_0 bits too as they
+    // always seems to read as 1...? I don't know why.
+    bool success = setShadowBit(INT_CTRL_1_REG, SW_RST);
+
+    clearShadowBit(INT_CTRL_1_REG, SW_RST, false); // Clear the bit - in shadow memory only
 
     // The reset time is 10 msec. but we'll wait 15 msec. just in case.
     delay(15);
