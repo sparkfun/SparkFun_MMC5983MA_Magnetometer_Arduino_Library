@@ -1068,6 +1068,10 @@ bool SFE_MMC5983MA::readFieldsXYZ(uint32_t *x, uint32_t *y, uint32_t *z)
 
 bool SFE_MMC5983MA::clearMeasDoneInterrupt(uint8_t measMask)
 {
-    measMask &= (MEAS_T_DONE | MEAS_M_DONE); // Ensure only the Meas_T_Done and Meas_M_Done interrupts can be cleared
-    return (mmc_io.setRegisterBit(STATUS_REG, measMask)); // Writing 1 into these bits will clear the corresponding interrupt
+    // Ensure only the Meas_T_Done and Meas_M_Done interrupts can be cleared
+    measMask &= (MEAS_T_DONE | MEAS_M_DONE);
+
+    // Writing 1 into these bits will clear the corresponding interrupt
+    // Read-modify-write is OK here
+    return (mmc_io.setRegisterBit(STATUS_REG, measMask));
 }
