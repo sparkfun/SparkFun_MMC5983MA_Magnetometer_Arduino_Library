@@ -121,6 +121,8 @@ public:
   bool disableXChannel();
 
   // Checks if X channel output is enabled
+  // Note: this returns true when the X channel is inhibited.
+  // Strictly, it should be called isXChannelInhibited.
   bool isXChannelEnabled();
 
   // Enables Y and Z channels outputs
@@ -130,6 +132,8 @@ public:
   bool disableYZChannels();
 
   // Checks if YZ channels outputs are enabled
+  // Note: this returns true when the Y and Z channels are inhibited.
+  // Strictly, it should be called areYZChannelsInhibited.
   bool areYZChannelsEnabled();
 
   // Sets decimation filter bandwidth. Allowed values are 800, 400, 200 or 100. Defaults to 100 on invalid values.
