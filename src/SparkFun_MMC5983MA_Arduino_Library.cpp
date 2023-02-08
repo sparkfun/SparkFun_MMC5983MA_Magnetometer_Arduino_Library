@@ -15,7 +15,7 @@
 #include "SparkFun_MMC5983MA_Arduino_Library.h"
 #include "SparkFun_MMC5983MA_Arduino_Library_Constants.h"
 
-bool SFE_MMC5983MA::setShadowBit(uint8_t registerAddress, const uint8_t bitMask)
+bool SFE_MMC5983MA::setShadowBit(uint8_t registerAddress, const uint8_t bitMask, bool doWrite)
 {
     uint8_t *shadowRegister = nullptr;
 
@@ -53,13 +53,15 @@ bool SFE_MMC5983MA::setShadowBit(uint8_t registerAddress, const uint8_t bitMask)
     if (shadowRegister)
     {
         *shadowRegister |= bitMask;
-        return (mmc_io.writeSingleByte(registerAddress, *shadowRegister));
+        if (doWrite)
+            return (mmc_io.writeSingleByte(registerAddress, *shadowRegister));
+        return true;
     }
 
     return false;
 }
 
-bool SFE_MMC5983MA::clearShadowBit(uint8_t registerAddress, const uint8_t bitMask)
+bool SFE_MMC5983MA::clearShadowBit(uint8_t registerAddress, const uint8_t bitMask, bool doWrite)
 {
     uint8_t *shadowRegister = nullptr;
 
@@ -97,7 +99,9 @@ bool SFE_MMC5983MA::clearShadowBit(uint8_t registerAddress, const uint8_t bitMas
     if (shadowRegister)
     {
         *shadowRegister &= ~bitMask;
-        return (mmc_io.writeSingleByte(registerAddress, *shadowRegister));
+        if (doWrite)
+            return (mmc_io.writeSingleByte(registerAddress, *shadowRegister));
+        return true;
     }
 
     return false;
@@ -234,10 +238,13 @@ bool SFE_MMC5983MA::isConnected()
 
 int SFE_MMC5983MA::getTemperature()
 {
-    // Send command to device. Since TM_T clears itself we don't need to
-    // use the shadow register for this - we can send the command directly to the IC.
-    if (!mmc_io.setRegisterBit(INT_CTRL_0_REG, TM_T))
+    // Set the TM_T bit to start the temperature conversion.
+    // Do this using the shadow register. If we do it with setRegisterBit
+    // (read-modify-write) we end up setting the Auto_SR_en bit too as that
+    // always seems to read as 1...? I don't know why.
+    if (!setShadowBit(INT_CTRL_0_REG, TM_T))
     {
+        clearShadowBit(INT_CTRL_0_REG, TM_T, false); // Clear the bit - in shadow memory only
         SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::BUS_ERROR);
         return -99;
     }
@@ -248,6 +255,8 @@ int SFE_MMC5983MA::getTemperature()
         // Wait a little so we won't flood MMC with requests
         delay(1);
     } while (!mmc_io.isBitSet(STATUS_REG, MEAS_T_DONE));
+
+    clearShadowBit(INT_CTRL_0_REG, TM_T, false); // Clear the bit - in shadow memory only
 
     // Get raw temperature value from the IC.
     uint8_t result = 0;
@@ -266,9 +275,13 @@ int SFE_MMC5983MA::getTemperature()
 
 bool SFE_MMC5983MA::softReset()
 {
-    // Since SW_RST bit clears itself we don't need to to through the shadow
-    // register for this - we can send the command directly to the IC.
-    bool success = mmc_io.setRegisterBit(INT_CTRL_1_REG, SW_RST);
+    // Set the SW_RST bit to perform a software reset.
+    // Do this using the shadow register. If we do it with setRegisterBit
+    // (read-modify-write) we end up setting the reserved and BW_0 bits too as they
+    // always seems to read as 1...? I don't know why.
+    bool success = setShadowBit(INT_CTRL_1_REG, SW_RST);
+
+    clearShadowBit(INT_CTRL_1_REG, SW_RST, false); // Clear the bit - in shadow memory only
 
     // The reset time is 10 msec. but we'll wait 15 msec. just in case.
     delay(15);
@@ -320,11 +333,15 @@ bool SFE_MMC5983MA::is3WireSPIEnabled()
 
 bool SFE_MMC5983MA::performSetOperation()
 {
-    // Since SET bit clears itself we don't need to to through the shadow
-    // register for this - we can send the command directly to the IC.
-    bool success = mmc_io.setRegisterBit(INT_CTRL_0_REG, SET_OPERATION);
+    // Set the SET bit to perform a set operation.
+    // Do this using the shadow register. If we do it with setRegisterBit
+    // (read-modify-write) we end up setting the Auto_SR_en bit too as that
+    // always seems to read as 1...? I don't know why.
+    bool success = setShadowBit(INT_CTRL_0_REG, SET_OPERATION);
 
-    // Wait until bit clears itself.
+    clearShadowBit(INT_CTRL_0_REG, SET_OPERATION, false); // Clear the bit - in shadow memory only
+
+    // Wait for the set operation to complete (500ns).
     delay(1);
 
     return success;
@@ -332,11 +349,15 @@ bool SFE_MMC5983MA::performSetOperation()
 
 bool SFE_MMC5983MA::performResetOperation()
 {
-    // Since RESET bit clears itself we don't need to to through the shadow
-    // register for this - we can send the command directly to the IC.
-    bool success = mmc_io.setRegisterBit(INT_CTRL_0_REG, RESET_OPERATION);
+    // Set the RESET bit to perform a reset operation.
+    // Do this using the shadow register. If we do it with setRegisterBit
+    // (read-modify-write) we end up setting the Auto_SR_en bit too as that
+    // always seems to read as 1...? I don't know why.
+    bool success = setShadowBit(INT_CTRL_0_REG, RESET_OPERATION);
 
-    // Wait until bit clears itself.
+    clearShadowBit(INT_CTRL_0_REG, RESET_OPERATION, false); // Clear the bit - in shadow memory only
+
+    // Wait for the reset operation to complete (500ns).
     delay(1);
 
     return success;
@@ -385,6 +406,9 @@ bool SFE_MMC5983MA::isXChannelEnabled()
 {
     // Get the bit value from the shadow register since the IC does not
     // allow reading INT_CTRL_1_REG register.
+    //
+    // Note: this returns true when the X channel is inhibited.
+    // Strictly, it should be called isXChannelInhibited.
     return (isShadowBitSet(INT_CTRL_1_REG, X_INHIBIT));
 }
 
@@ -410,6 +434,9 @@ bool SFE_MMC5983MA::areYZChannelsEnabled()
 {
     // Get the bit value from the shadow register since the IC does not
     // allow reading INT_CTRL_1_REG register.
+    //
+    // Note: this returns true when the Y and Z channels are inhibited.
+    // Strictly, it should be called areYZChannelsInhibited.
     return (isShadowBitSet(INT_CTRL_1_REG, YZ_INHIBIT));
 }
 
@@ -423,28 +450,28 @@ bool SFE_MMC5983MA::setFilterBandwidth(uint16_t bandwidth)
     {
     case 800:
     {
-        success = setShadowBit(INT_CTRL_1_REG, BW0);
+        success = setShadowBit(INT_CTRL_1_REG, BW0, false);
         success &= setShadowBit(INT_CTRL_1_REG, BW1);
     }
     break;
 
     case 400:
     {
-        success = clearShadowBit(INT_CTRL_1_REG, BW0);
+        success = clearShadowBit(INT_CTRL_1_REG, BW0, false);
         success &= setShadowBit(INT_CTRL_1_REG, BW1);
     }
     break;
 
     case 200:
     {
-        success = setShadowBit(INT_CTRL_1_REG, BW0);
+        success = setShadowBit(INT_CTRL_1_REG, BW0, false);
         success &= clearShadowBit(INT_CTRL_1_REG, BW1);
     }
     break;
 
     case 100:
     {
-        success = clearShadowBit(INT_CTRL_1_REG, BW0);
+        success = clearShadowBit(INT_CTRL_1_REG, BW0, false);
         success &= clearShadowBit(INT_CTRL_1_REG, BW1);
     }
     break;
@@ -522,8 +549,8 @@ bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
     case 1:
     {
         // CM_FREQ[2:0] = 001
-        success = clearShadowBit(INT_CTRL_2_REG, CM_FREQ_2);
-        success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_1);
+        success = clearShadowBit(INT_CTRL_2_REG, CM_FREQ_2, false);
+        success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_1, false);
         success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_0);
     }
     break;
@@ -531,8 +558,8 @@ bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
     case 10:
     {
         // CM_FREQ[2:0] = 010
-        success = clearShadowBit(INT_CTRL_2_REG, CM_FREQ_2);
-        success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_1);
+        success = clearShadowBit(INT_CTRL_2_REG, CM_FREQ_2, false);
+        success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_1, false);
         success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_0);
     }
     break;
@@ -540,8 +567,8 @@ bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
     case 20:
     {
         // CM_FREQ[2:0] = 011
-        success = clearShadowBit(INT_CTRL_2_REG, CM_FREQ_2);
-        success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_1);
+        success = clearShadowBit(INT_CTRL_2_REG, CM_FREQ_2, false);
+        success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_1, false);
         success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_0);
     }
     break;
@@ -549,8 +576,8 @@ bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
     case 50:
     {
         // CM_FREQ[2:0] = 100
-        success = setShadowBit(INT_CTRL_2_REG, CM_FREQ_2);
-        success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_1);
+        success = setShadowBit(INT_CTRL_2_REG, CM_FREQ_2, false);
+        success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_1, false);
         success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_0);
     }
     break;
@@ -558,8 +585,8 @@ bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
     case 100:
     {
         // CM_FREQ[2:0] = 101
-        success = setShadowBit(INT_CTRL_2_REG, CM_FREQ_2);
-        success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_1);
+        success = setShadowBit(INT_CTRL_2_REG, CM_FREQ_2, false);
+        success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_1, false);
         success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_0);
     }
     break;
@@ -567,8 +594,8 @@ bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
     case 200:
     {
         // CM_FREQ[2:0] = 110
-        success = setShadowBit(INT_CTRL_2_REG, CM_FREQ_2);
-        success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_1);
+        success = setShadowBit(INT_CTRL_2_REG, CM_FREQ_2, false);
+        success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_1, false);
         success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_0);
     }
     break;
@@ -576,8 +603,8 @@ bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
     case 1000:
     {
         // CM_FREQ[2:0] = 111
-        success = setShadowBit(INT_CTRL_2_REG, CM_FREQ_2);
-        success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_1);
+        success = setShadowBit(INT_CTRL_2_REG, CM_FREQ_2, false);
+        success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_1, false);
         success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_0);
     }
     break;
@@ -585,8 +612,8 @@ bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
     case 0:
     {
         // CM_FREQ[2:0] = 000
-        success = clearShadowBit(INT_CTRL_2_REG, CM_FREQ_2);
-        success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_1);
+        success = clearShadowBit(INT_CTRL_2_REG, CM_FREQ_2, false);
+        success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_1, false);
         success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_0);
     }
     break;
@@ -696,8 +723,8 @@ bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
     case 25:
     {
         // PRD_SET[2:0] = 001
-        success = clearShadowBit(INT_CTRL_2_REG, PRD_SET_2);
-        success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_1);
+        success = clearShadowBit(INT_CTRL_2_REG, PRD_SET_2, false);
+        success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_1, false);
         success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_0);
     }
     break;
@@ -705,8 +732,8 @@ bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
     case 75:
     {
         // PRD_SET[2:0] = 010
-        success = clearShadowBit(INT_CTRL_2_REG, PRD_SET_2);
-        success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_1);
+        success = clearShadowBit(INT_CTRL_2_REG, PRD_SET_2, false);
+        success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_1, false);
         success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_0);
     }
     break;
@@ -714,8 +741,8 @@ bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
     case 100:
     {
         // PRD_SET[2:0] = 011
-        success = clearShadowBit(INT_CTRL_2_REG, PRD_SET_2);
-        success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_1);
+        success = clearShadowBit(INT_CTRL_2_REG, PRD_SET_2, false);
+        success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_1, false);
         success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_0);
     }
     break;
@@ -723,8 +750,8 @@ bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
     case 250:
     {
         // PRD_SET[2:0] = 100
-        success = setShadowBit(INT_CTRL_2_REG, PRD_SET_2);
-        success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_1);
+        success = setShadowBit(INT_CTRL_2_REG, PRD_SET_2, false);
+        success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_1, false);
         success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_0);
     }
     break;
@@ -732,8 +759,8 @@ bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
     case 500:
     {
         // PRD_SET[2:0] = 101
-        success = setShadowBit(INT_CTRL_2_REG, PRD_SET_2);
-        success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_1);
+        success = setShadowBit(INT_CTRL_2_REG, PRD_SET_2, false);
+        success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_1, false);
         success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_0);
     }
     break;
@@ -741,8 +768,8 @@ bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
     case 1000:
     {
         // PRD_SET[2:0] = 110
-        success = setShadowBit(INT_CTRL_2_REG, PRD_SET_2);
-        success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_1);
+        success = setShadowBit(INT_CTRL_2_REG, PRD_SET_2, false);
+        success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_1, false);
         success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_0);
     }
     break;
@@ -750,8 +777,8 @@ bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
     case 2000:
     {
         // PRD_SET[2:0] = 111
-        success = setShadowBit(INT_CTRL_2_REG, PRD_SET_2);
-        success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_1);
+        success = setShadowBit(INT_CTRL_2_REG, PRD_SET_2, false);
+        success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_1, false);
         success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_0);
     }
     break;
@@ -759,8 +786,8 @@ bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
     case 1:
     {
         // PRD_SET[2:0] = 000
-        success = clearShadowBit(INT_CTRL_2_REG, PRD_SET_2);
-        success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_1);
+        success = clearShadowBit(INT_CTRL_2_REG, PRD_SET_2, false);
+        success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_1, false);
         success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_0);
     }
     break;
@@ -882,9 +909,13 @@ bool SFE_MMC5983MA::isExtraCurrentAppliedNegToPos()
 
 uint32_t SFE_MMC5983MA::getMeasurementX()
 {
-    // Send command to device. TM_M self clears so we can access it directly.
-    if (!mmc_io.setRegisterBit(INT_CTRL_0_REG, TM_M))
+    // Set the TM_M bit to start the measurement.
+    // Do this using the shadow register. If we do it with setRegisterBit
+    // (read-modify-write) we end up setting the Auto_SR_en bit too as that
+    // always seems to read as 1...? I don't know why.
+    if (!setShadowBit(INT_CTRL_0_REG, TM_M))
     {
+        clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
         SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::BUS_ERROR);
         return 0;
     }
@@ -895,6 +926,8 @@ uint32_t SFE_MMC5983MA::getMeasurementX()
         // Wait a little so we won't flood MMC with requests
         delay(1);
     } while (!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE));
+
+    clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
 
     uint32_t result = 0;
     uint8_t buffer[2] = {0};
@@ -912,9 +945,13 @@ uint32_t SFE_MMC5983MA::getMeasurementX()
 
 uint32_t SFE_MMC5983MA::getMeasurementY()
 {
-    // Send command to device. TM_M self clears so we can access it directly.
-    if (!mmc_io.setRegisterBit(INT_CTRL_0_REG, TM_M))
+    // Set the TM_M bit to start the measurement.
+    // Do this using the shadow register. If we do it with setRegisterBit
+    // (read-modify-write) we end up setting the Auto_SR_en bit too as that
+    // always seems to read as 1...? I don't know why.
+    if (!setShadowBit(INT_CTRL_0_REG, TM_M))
     {
+        clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
         SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::BUS_ERROR);
         return 0;
     }
@@ -925,6 +962,8 @@ uint32_t SFE_MMC5983MA::getMeasurementY()
         // Wait a little so we won't flood MMC with requests
         delay(1);
     } while (!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE));
+
+    clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
 
     uint32_t result = 0;
     uint8_t buffer[2] = {0};
@@ -942,9 +981,13 @@ uint32_t SFE_MMC5983MA::getMeasurementY()
 
 uint32_t SFE_MMC5983MA::getMeasurementZ()
 {
-    // Send command to device. TM_M self clears so we can access it directly.
-    if (!mmc_io.setRegisterBit(INT_CTRL_0_REG, TM_M))
+    // Set the TM_M bit to start the measurement.
+    // Do this using the shadow register. If we do it with setRegisterBit
+    // (read-modify-write) we end up setting the Auto_SR_en bit too as that
+    // always seems to read as 1...? I don't know why.
+    if (!setShadowBit(INT_CTRL_0_REG, TM_M))
     {
+        clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
         SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::BUS_ERROR);
         return 0;
     }
@@ -955,6 +998,8 @@ uint32_t SFE_MMC5983MA::getMeasurementZ()
         // Wait a little so we won't flood MMC with requests
         delay(1);
     } while (!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE));
+
+    clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
 
     uint32_t result = 0;
     uint8_t buffer[3] = {0};
@@ -970,11 +1015,15 @@ uint32_t SFE_MMC5983MA::getMeasurementZ()
 
 bool SFE_MMC5983MA::getMeasurementXYZ(uint32_t *x, uint32_t *y, uint32_t *z)
 {
-    // Send command to device. TM_M self clears so we can access it directly.
-    bool success = mmc_io.setRegisterBit(INT_CTRL_0_REG, TM_M);
+    // Set the TM_M bit to start the measurement.
+    // Do this using the shadow register. If we do it with setRegisterBit
+    // (read-modify-write) we end up setting the Auto_SR_en bit too as that
+    // always seems to read as 1...? I don't know why.
+    bool success = setShadowBit(INT_CTRL_0_REG, TM_M);
 
     if (!success)
     {
+        clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
         SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::BUS_ERROR);
         return false;
     }
@@ -985,6 +1034,8 @@ bool SFE_MMC5983MA::getMeasurementXYZ(uint32_t *x, uint32_t *y, uint32_t *z)
         // Wait a little so we won't flood MMC with requests
         delay(1);
     } while (!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE));
+
+    clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
 
     return (readFieldsXYZ(x, y, z));
 }
@@ -1017,6 +1068,10 @@ bool SFE_MMC5983MA::readFieldsXYZ(uint32_t *x, uint32_t *y, uint32_t *z)
 
 bool SFE_MMC5983MA::clearMeasDoneInterrupt(uint8_t measMask)
 {
-    measMask &= (MEAS_T_DONE | MEAS_M_DONE); // Ensure only the Meas_T_Done and Meas_M_Done interrupts can be cleared
-    return (mmc_io.setRegisterBit(STATUS_REG, measMask)); // Writing 1 into these bits will clear the corresponding interrupt
+    // Ensure only the Meas_T_Done and Meas_M_Done interrupts can be cleared
+    measMask &= (MEAS_T_DONE | MEAS_M_DONE);
+
+    // Writing 1 into these bits will clear the corresponding interrupt
+    // Read-modify-write is OK here
+    return (mmc_io.setRegisterBit(STATUS_REG, measMask));
 }
