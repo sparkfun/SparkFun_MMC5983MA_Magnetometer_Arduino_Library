@@ -406,6 +406,9 @@ bool SFE_MMC5983MA::isXChannelEnabled()
 {
     // Get the bit value from the shadow register since the IC does not
     // allow reading INT_CTRL_1_REG register.
+    //
+    // Note: this returns true when the X channel is inhibited.
+    // Strictly, it should be called isXChannelInhibited.
     return (isShadowBitSet(INT_CTRL_1_REG, X_INHIBIT));
 }
 
@@ -431,6 +434,9 @@ bool SFE_MMC5983MA::areYZChannelsEnabled()
 {
     // Get the bit value from the shadow register since the IC does not
     // allow reading INT_CTRL_1_REG register.
+    //
+    // Note: this returns true when the Y and Z channels are inhibited.
+    // Strictly, it should be called areYZChannelsInhibited.
     return (isShadowBitSet(INT_CTRL_1_REG, YZ_INHIBIT));
 }
 
@@ -444,28 +450,28 @@ bool SFE_MMC5983MA::setFilterBandwidth(uint16_t bandwidth)
     {
     case 800:
     {
-        success = setShadowBit(INT_CTRL_1_REG, BW0);
+        success = setShadowBit(INT_CTRL_1_REG, BW0, false);
         success &= setShadowBit(INT_CTRL_1_REG, BW1);
     }
     break;
 
     case 400:
     {
-        success = clearShadowBit(INT_CTRL_1_REG, BW0);
+        success = clearShadowBit(INT_CTRL_1_REG, BW0, false);
         success &= setShadowBit(INT_CTRL_1_REG, BW1);
     }
     break;
 
     case 200:
     {
-        success = setShadowBit(INT_CTRL_1_REG, BW0);
+        success = setShadowBit(INT_CTRL_1_REG, BW0, false);
         success &= clearShadowBit(INT_CTRL_1_REG, BW1);
     }
     break;
 
     case 100:
     {
-        success = clearShadowBit(INT_CTRL_1_REG, BW0);
+        success = clearShadowBit(INT_CTRL_1_REG, BW0, false);
         success &= clearShadowBit(INT_CTRL_1_REG, BW1);
     }
     break;
@@ -543,8 +549,8 @@ bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
     case 1:
     {
         // CM_FREQ[2:0] = 001
-        success = clearShadowBit(INT_CTRL_2_REG, CM_FREQ_2);
-        success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_1);
+        success = clearShadowBit(INT_CTRL_2_REG, CM_FREQ_2, false);
+        success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_1, false);
         success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_0);
     }
     break;
@@ -552,8 +558,8 @@ bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
     case 10:
     {
         // CM_FREQ[2:0] = 010
-        success = clearShadowBit(INT_CTRL_2_REG, CM_FREQ_2);
-        success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_1);
+        success = clearShadowBit(INT_CTRL_2_REG, CM_FREQ_2, false);
+        success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_1, false);
         success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_0);
     }
     break;
@@ -561,8 +567,8 @@ bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
     case 20:
     {
         // CM_FREQ[2:0] = 011
-        success = clearShadowBit(INT_CTRL_2_REG, CM_FREQ_2);
-        success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_1);
+        success = clearShadowBit(INT_CTRL_2_REG, CM_FREQ_2, false);
+        success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_1, false);
         success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_0);
     }
     break;
@@ -570,8 +576,8 @@ bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
     case 50:
     {
         // CM_FREQ[2:0] = 100
-        success = setShadowBit(INT_CTRL_2_REG, CM_FREQ_2);
-        success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_1);
+        success = setShadowBit(INT_CTRL_2_REG, CM_FREQ_2, false);
+        success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_1, false);
         success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_0);
     }
     break;
@@ -579,8 +585,8 @@ bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
     case 100:
     {
         // CM_FREQ[2:0] = 101
-        success = setShadowBit(INT_CTRL_2_REG, CM_FREQ_2);
-        success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_1);
+        success = setShadowBit(INT_CTRL_2_REG, CM_FREQ_2, false);
+        success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_1, false);
         success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_0);
     }
     break;
@@ -588,8 +594,8 @@ bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
     case 200:
     {
         // CM_FREQ[2:0] = 110
-        success = setShadowBit(INT_CTRL_2_REG, CM_FREQ_2);
-        success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_1);
+        success = setShadowBit(INT_CTRL_2_REG, CM_FREQ_2, false);
+        success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_1, false);
         success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_0);
     }
     break;
@@ -597,8 +603,8 @@ bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
     case 1000:
     {
         // CM_FREQ[2:0] = 111
-        success = setShadowBit(INT_CTRL_2_REG, CM_FREQ_2);
-        success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_1);
+        success = setShadowBit(INT_CTRL_2_REG, CM_FREQ_2, false);
+        success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_1, false);
         success &= setShadowBit(INT_CTRL_2_REG, CM_FREQ_0);
     }
     break;
@@ -606,8 +612,8 @@ bool SFE_MMC5983MA::setContinuousModeFrequency(uint16_t frequency)
     case 0:
     {
         // CM_FREQ[2:0] = 000
-        success = clearShadowBit(INT_CTRL_2_REG, CM_FREQ_2);
-        success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_1);
+        success = clearShadowBit(INT_CTRL_2_REG, CM_FREQ_2, false);
+        success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_1, false);
         success &= clearShadowBit(INT_CTRL_2_REG, CM_FREQ_0);
     }
     break;
@@ -717,8 +723,8 @@ bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
     case 25:
     {
         // PRD_SET[2:0] = 001
-        success = clearShadowBit(INT_CTRL_2_REG, PRD_SET_2);
-        success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_1);
+        success = clearShadowBit(INT_CTRL_2_REG, PRD_SET_2, false);
+        success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_1, false);
         success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_0);
     }
     break;
@@ -726,8 +732,8 @@ bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
     case 75:
     {
         // PRD_SET[2:0] = 010
-        success = clearShadowBit(INT_CTRL_2_REG, PRD_SET_2);
-        success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_1);
+        success = clearShadowBit(INT_CTRL_2_REG, PRD_SET_2, false);
+        success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_1, false);
         success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_0);
     }
     break;
@@ -735,8 +741,8 @@ bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
     case 100:
     {
         // PRD_SET[2:0] = 011
-        success = clearShadowBit(INT_CTRL_2_REG, PRD_SET_2);
-        success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_1);
+        success = clearShadowBit(INT_CTRL_2_REG, PRD_SET_2, false);
+        success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_1, false);
         success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_0);
     }
     break;
@@ -744,8 +750,8 @@ bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
     case 250:
     {
         // PRD_SET[2:0] = 100
-        success = setShadowBit(INT_CTRL_2_REG, PRD_SET_2);
-        success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_1);
+        success = setShadowBit(INT_CTRL_2_REG, PRD_SET_2, false);
+        success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_1, false);
         success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_0);
     }
     break;
@@ -753,8 +759,8 @@ bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
     case 500:
     {
         // PRD_SET[2:0] = 101
-        success = setShadowBit(INT_CTRL_2_REG, PRD_SET_2);
-        success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_1);
+        success = setShadowBit(INT_CTRL_2_REG, PRD_SET_2, false);
+        success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_1, false);
         success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_0);
     }
     break;
@@ -762,8 +768,8 @@ bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
     case 1000:
     {
         // PRD_SET[2:0] = 110
-        success = setShadowBit(INT_CTRL_2_REG, PRD_SET_2);
-        success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_1);
+        success = setShadowBit(INT_CTRL_2_REG, PRD_SET_2, false);
+        success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_1, false);
         success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_0);
     }
     break;
@@ -771,8 +777,8 @@ bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
     case 2000:
     {
         // PRD_SET[2:0] = 111
-        success = setShadowBit(INT_CTRL_2_REG, PRD_SET_2);
-        success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_1);
+        success = setShadowBit(INT_CTRL_2_REG, PRD_SET_2, false);
+        success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_1, false);
         success &= setShadowBit(INT_CTRL_2_REG, PRD_SET_0);
     }
     break;
@@ -780,8 +786,8 @@ bool SFE_MMC5983MA::setPeriodicSetSamples(const uint16_t numberOfSamples)
     case 1:
     {
         // PRD_SET[2:0] = 000
-        success = clearShadowBit(INT_CTRL_2_REG, PRD_SET_2);
-        success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_1);
+        success = clearShadowBit(INT_CTRL_2_REG, PRD_SET_2, false);
+        success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_1, false);
         success &= clearShadowBit(INT_CTRL_2_REG, PRD_SET_0);
     }
     break;
