@@ -42,11 +42,11 @@ private:
     uint8_t internalControl3 = 0x0;
   } memoryShadow;
 
-  // Sets register bit(s) on memory shadows and then registers
-  bool setShadowBit(uint8_t registerAddress, const uint8_t bitMask);
+  // Sets register bit(s) on memory shadows and then registers (if doWrite is true)
+  bool setShadowBit(uint8_t registerAddress, const uint8_t bitMask, bool doWrite = true);
 
-  // Clears register bit(s) on memory shadows and then registers
-  bool clearShadowBit(uint8_t registerAddress, const uint8_t bitMask);
+  // Clears register bit(s) on memory shadows and then registers (if doWrite is true)
+  bool clearShadowBit(uint8_t registerAddress, const uint8_t bitMask, bool doWrite = true);
 
   // Checks if a specific bit is set on a register memory shadow
   bool isShadowBitSet(uint8_t registerAddress, const uint8_t bitMask);

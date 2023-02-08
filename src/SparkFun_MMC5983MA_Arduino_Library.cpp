@@ -15,7 +15,7 @@
 #include "SparkFun_MMC5983MA_Arduino_Library.h"
 #include "SparkFun_MMC5983MA_Arduino_Library_Constants.h"
 
-bool SFE_MMC5983MA::setShadowBit(uint8_t registerAddress, const uint8_t bitMask)
+bool SFE_MMC5983MA::setShadowBit(uint8_t registerAddress, const uint8_t bitMask, bool doWrite)
 {
     uint8_t *shadowRegister = nullptr;
 
@@ -53,13 +53,15 @@ bool SFE_MMC5983MA::setShadowBit(uint8_t registerAddress, const uint8_t bitMask)
     if (shadowRegister)
     {
         *shadowRegister |= bitMask;
-        return (mmc_io.writeSingleByte(registerAddress, *shadowRegister));
+        if (doWrite)
+            return (mmc_io.writeSingleByte(registerAddress, *shadowRegister));
+        return true;
     }
 
     return false;
 }
 
-bool SFE_MMC5983MA::clearShadowBit(uint8_t registerAddress, const uint8_t bitMask)
+bool SFE_MMC5983MA::clearShadowBit(uint8_t registerAddress, const uint8_t bitMask, bool doWrite)
 {
     uint8_t *shadowRegister = nullptr;
 
@@ -97,7 +99,9 @@ bool SFE_MMC5983MA::clearShadowBit(uint8_t registerAddress, const uint8_t bitMas
     if (shadowRegister)
     {
         *shadowRegister &= ~bitMask;
-        return (mmc_io.writeSingleByte(registerAddress, *shadowRegister));
+        if (doWrite)
+            return (mmc_io.writeSingleByte(registerAddress, *shadowRegister));
+        return true;
     }
 
     return false;
@@ -234,10 +238,13 @@ bool SFE_MMC5983MA::isConnected()
 
 int SFE_MMC5983MA::getTemperature()
 {
-    // Send command to device. Since TM_T clears itself we don't need to
-    // use the shadow register for this - we can send the command directly to the IC.
-    if (!mmc_io.setRegisterBit(INT_CTRL_0_REG, TM_T))
+    // Set the TM_T bit to start the temperature conversion.
+    // Do this using the shadow register. If we do it with setRegisterBit
+    // (read-modify-write) we end up setting the Auto_SR_en bit too as that
+    // always seems to read as 1...? I don't know why.
+    if (!setShadowBit(INT_CTRL_0_REG, TM_T))
     {
+        clearShadowBit(INT_CTRL_0_REG, TM_T, false); // Clear the bit - in shadow memory only
         SAFE_CALLBACK(errorCallback, SF_MMC5983MA_ERROR::BUS_ERROR);
         return -99;
     }
@@ -248,6 +255,8 @@ int SFE_MMC5983MA::getTemperature()
         // Wait a little so we won't flood MMC with requests
         delay(1);
     } while (!mmc_io.isBitSet(STATUS_REG, MEAS_T_DONE));
+
+    clearShadowBit(INT_CTRL_0_REG, TM_T, false); // Clear the bit - in shadow memory only
 
     // Get raw temperature value from the IC.
     uint8_t result = 0;
