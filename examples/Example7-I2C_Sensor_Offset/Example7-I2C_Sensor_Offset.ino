@@ -108,14 +108,14 @@ void loop()
   // Here we subtract the offset, then normalize each field to +/- 1.0,
   // then multiply by 8 to convert to Gauss
   double normalizedX = (double)currentX - (double)offsetX; // Convert to double _before_ subtracting
-  //normalizedX /= 131072.0;
-  //normalizedX *= 8.0;
+  normalizedX /= 131072.0;
+  normalizedX *= 8.0;
   double normalizedY = (double)currentY - (double)offsetY; // Convert to double _before_ subtracting
-  //normalizedY /= 131072.0;
-  //normalizedY *= 8.0;
+  normalizedY /= 131072.0;
+  normalizedY *= 8.0;
   double normalizedZ = (double)currentZ - (double)offsetZ; // Convert to double _before_ subtracting
-  //normalizedZ /= 131072.0;
-  //normalizedZ *= 8.0;
+  normalizedZ /= 131072.0;
+  normalizedZ *= 8.0;
 
   // Print the three channels with commas in between so the Serial Plotter can plot them
   Serial.print(normalizedX, 5); // Print with 5 decimal places
@@ -149,9 +149,12 @@ bool updateOffset(uint32_t *offsetX, uint32_t *offsetY, uint32_t *offsetZ) // Up
 
   // Calculate the offset - as per the datasheet.
   // The measurements are 18-bit so it's OK to add them directly.
-  *offsetX = (setX + resetX) / 2;
-  *offsetY = (setY + resetY) / 2;
-  *offsetZ = (setZ + resetZ) / 2;
+  if (success)
+  {
+    *offsetX = (setX + resetX) / 2;
+    *offsetY = (setY + resetY) / 2;
+    *offsetZ = (setZ + resetZ) / 2;
+  }
 
   return success;
 }
