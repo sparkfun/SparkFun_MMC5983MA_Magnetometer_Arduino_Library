@@ -81,7 +81,7 @@ void setup()
 
 void loop()
 {
-  // The magnetic field values are 18-bit unsigned. The zero (mid) point is 2^17 (131072).
+  // The magnetic field values are 18-bit unsigned. The _approximate_ zero (mid) point is 2^17 (131072).
   // Use static variables to hold the offset. Set to 131072 initially.
   static uint32_t offsetX = 131072;
   static uint32_t offsetY = 131072;
@@ -104,25 +104,29 @@ void loop()
   myMag.getMeasurementXYZ(&currentX, &currentY, &currentZ);
 
   // The magnetic field values are 18-bit unsigned.
-  // The zero (mid) point should be 2^17 (131072).
-  // Here we subtract the offset, then normalize each field to +/- 1.0,
+  // The _approximate_ zero (mid) point should be 2^17 (131072).
+  // Here we subtract the offset, then scale each field to +/- 1.0,
   // then multiply by 8 to convert to Gauss
-  double normalizedX = (double)currentX - (double)offsetX; // Convert to double _before_ subtracting
-  normalizedX /= 131072.0;
-  normalizedX *= 8.0;
-  double normalizedY = (double)currentY - (double)offsetY; // Convert to double _before_ subtracting
-  normalizedY /= 131072.0;
-  normalizedY *= 8.0;
-  double normalizedZ = (double)currentZ - (double)offsetZ; // Convert to double _before_ subtracting
-  normalizedZ /= 131072.0;
-  normalizedZ *= 8.0;
+  //
+  // Please note: to properly correct and calibrate the X, Y and Z channels, you need to determine true
+  // offsets (zero points) and scale factors (gains) for all three channels. Futher details can be found at:
+  // https://thecavepearlproject.org/2015/05/22/calibrating-any-compass-or-accelerometer-for-arduino/
+  double scaledX = (double)currentX - (double)offsetX; // Convert to double _before_ subtracting
+  scaledX /= 131072.0;
+  scaledX *= 8.0;
+  double scaledY = (double)currentY - (double)offsetY; // Convert to double _before_ subtracting
+  scaledY /= 131072.0;
+  scaledY *= 8.0;
+  double scaledZ = (double)currentZ - (double)offsetZ; // Convert to double _before_ subtracting
+  scaledZ /= 131072.0;
+  scaledZ *= 8.0;
 
   // Print the three channels with commas in between so the Serial Plotter can plot them
-  Serial.print(normalizedX, 5); // Print with 5 decimal places
+  Serial.print(scaledX, 5); // Print with 5 decimal places
   Serial.print(",");
-  Serial.print(normalizedY, 5);
+  Serial.print(scaledY, 5);
   Serial.print(",");
-  Serial.println(normalizedZ, 5);
+  Serial.println(scaledZ, 5);
 }
 
 bool updateOffset(uint32_t *offsetX, uint32_t *offsetY, uint32_t *offsetZ) // Update the offsets
@@ -154,6 +158,13 @@ bool updateOffset(uint32_t *offsetX, uint32_t *offsetY, uint32_t *offsetZ) // Up
     *offsetX = (setX + resetX) / 2;
     *offsetY = (setY + resetY) / 2;
     *offsetZ = (setZ + resetZ) / 2;
+    //Serial.print("Offsets: ")
+    //Serial.print(*offsetX);
+    //Serial.print(", ");
+    //Serial.print(*offsetY);
+    //Serial.print(", ");
+    //Serial.print(*offsetZ);
+    //Serial.println();
   }
 
   return success;
