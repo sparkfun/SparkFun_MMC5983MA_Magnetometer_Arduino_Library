@@ -249,16 +249,21 @@ int SFE_MMC5983MA::getTemperature()
         return -99;
     }
 
-    // Wait until measurement is completed
+    // Wait until measurement is completed.
+    // It is rare but there are some devices and some circumstances where the code can become
+    // stuck in this loop waiting for MEAS_T_DONE to go high. The solution is to timeout after 5ms.
+    uint8_t timeOut = 5;
     do
     {
         // Wait a little so we won't flood MMC with requests
         delay(1);
-    } while (!mmc_io.isBitSet(STATUS_REG, MEAS_T_DONE));
+        timeOut--;
+    } while ((!mmc_io.isBitSet(STATUS_REG, MEAS_T_DONE)) && (timeOut > 0));
 
     clearShadowBit(INT_CTRL_0_REG, TM_T, false); // Clear the bit - in shadow memory only
 
-    // Get raw temperature value from the IC.
+    // Get raw temperature value from the IC
+    // even if a timeout occurred - old data vs no data
     uint8_t result = 0;
     if (!mmc_io.readSingleByte(T_OUT_REG, &result))
     {
@@ -922,19 +927,18 @@ uint32_t SFE_MMC5983MA::getMeasurementX()
 
     // Wait until measurement is completed.
     // It is rare but there are some devices and some circumstances where the code can become
-    // stuck in this loop waiting for MEAS_M_DONE to go high. It possibly coincides with the
-    // OTP_Read_Done bit also reading low. The solution is to timeout after 2 * the measurement
-    // time (defined by BW1/0).
-    uint16_t bw = getFilterBandwith(); // Read the bandwidth (100/200/400/800Hz)
-    bw = 800 / bw; // Convert bw to 8/4/2/1
-    bw *= 2; // Convert bw to 16/8/4/2
-    bw += 1; // Add 1 just in case (for 800Hz)
+    // stuck in this loop waiting for MEAS_M_DONE to go high. The solution is to timeout after
+    // 4 * the measurement time (defined by BW1/0).
+    uint16_t timeOut = getFilterBandwith(); // Read the bandwidth (100/200/400/800Hz) from shadow
+    timeOut = 800 / timeOut; // Convert timeOut to 8/4/2/1ms
+    timeOut *= 4; // Convert bw to 32/16/8/4ms
+    timeOut += 1; // Add 1 just in case (for 800Hz)
     do
     {
         // Wait a little so we won't flood MMC with requests
         delay(1);
-        bw--;
-    } while ((!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE)) && (bw > 0));
+        timeOut--;
+    } while ((!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE)) && (timeOut > 0));
 
     clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
 
@@ -942,6 +946,7 @@ uint32_t SFE_MMC5983MA::getMeasurementX()
     uint8_t buffer[2] = {0};
     uint8_t buffer2bit = 0;
 
+    // Read the field even if a timeout occurred - old data vs no data
     mmc_io.readMultipleBytes(X_OUT_0_REG, buffer, 2);
     mmc_io.readSingleByte(XYZ_OUT_2_REG, &buffer2bit);
 
@@ -967,19 +972,18 @@ uint32_t SFE_MMC5983MA::getMeasurementY()
 
     // Wait until measurement is completed.
     // It is rare but there are some devices and some circumstances where the code can become
-    // stuck in this loop waiting for MEAS_M_DONE to go high. It possibly coincides with the
-    // OTP_Read_Done bit also reading low. The solution is to timeout after 2 * the measurement
-    // time (defined by BW1/0).
-    uint16_t bw = getFilterBandwith(); // Read the bandwidth (100/200/400/800Hz)
-    bw = 800 / bw; // Convert bw to 8/4/2/1
-    bw *= 2; // Convert bw to 16/8/4/2
-    bw += 1; // Add 1 just in case (for 800Hz)
+    // stuck in this loop waiting for MEAS_M_DONE to go high. The solution is to timeout after
+    // 4 * the measurement time (defined by BW1/0).
+    uint16_t timeOut = getFilterBandwith(); // Read the bandwidth (100/200/400/800Hz) from shadow
+    timeOut = 800 / timeOut; // Convert timeOut to 8/4/2/1ms
+    timeOut *= 4; // Convert bw to 32/16/8/4ms
+    timeOut += 1; // Add 1 just in case (for 800Hz)
     do
     {
         // Wait a little so we won't flood MMC with requests
         delay(1);
-        bw--;
-    } while ((!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE)) && (bw > 0));
+        timeOut--;
+    } while ((!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE)) && (timeOut > 0));
 
     clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
 
@@ -987,6 +991,7 @@ uint32_t SFE_MMC5983MA::getMeasurementY()
     uint8_t buffer[2] = {0};
     uint8_t buffer2bit = 0;
 
+    // Read the field even if a timeout occurred - old data vs no data
     mmc_io.readMultipleBytes(Y_OUT_0_REG, buffer, 2);
     mmc_io.readSingleByte(XYZ_OUT_2_REG, &buffer2bit);
 
@@ -1012,25 +1017,25 @@ uint32_t SFE_MMC5983MA::getMeasurementZ()
 
     // Wait until measurement is completed.
     // It is rare but there are some devices and some circumstances where the code can become
-    // stuck in this loop waiting for MEAS_M_DONE to go high. It possibly coincides with the
-    // OTP_Read_Done bit also reading low. The solution is to timeout after 2 * the measurement
-    // time (defined by BW1/0).
-    uint16_t bw = getFilterBandwith(); // Read the bandwidth (100/200/400/800Hz)
-    bw = 800 / bw; // Convert bw to 8/4/2/1
-    bw *= 2; // Convert bw to 16/8/4/2
-    bw += 1; // Add 1 just in case (for 800Hz)
+    // stuck in this loop waiting for MEAS_M_DONE to go high. The solution is to timeout after
+    // 4 * the measurement time (defined by BW1/0).
+    uint16_t timeOut = getFilterBandwith(); // Read the bandwidth (100/200/400/800Hz) from shadow
+    timeOut = 800 / timeOut; // Convert timeOut to 8/4/2/1ms
+    timeOut *= 4; // Convert bw to 32/16/8/4ms
+    timeOut += 1; // Add 1 just in case (for 800Hz)
     do
     {
         // Wait a little so we won't flood MMC with requests
         delay(1);
-        bw--;
-    } while ((!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE)) && (bw > 0));
+        timeOut--;
+    } while ((!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE)) && (timeOut > 0));
 
     clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
 
     uint32_t result = 0;
     uint8_t buffer[3] = {0};
 
+    // Read the field even if a timeout occurred - old data vs no data
     mmc_io.readMultipleBytes(Z_OUT_0_REG, buffer, 3);
 
     result = buffer[0]; // out[17:10]
@@ -1057,23 +1062,24 @@ bool SFE_MMC5983MA::getMeasurementXYZ(uint32_t *x, uint32_t *y, uint32_t *z)
 
     // Wait until measurement is completed.
     // It is rare but there are some devices and some circumstances where the code can become
-    // stuck in this loop waiting for MEAS_M_DONE to go high. It possibly coincides with the
-    // OTP_Read_Done bit also reading low. The solution is to timeout after 2 * the measurement
-    // time (defined by BW1/0).
-    uint16_t bw = getFilterBandwith(); // Read the bandwidth (100/200/400/800Hz)
-    bw = 800 / bw; // Convert bw to 8/4/2/1
-    bw *= 2; // Convert bw to 16/8/4/2
-    bw += 1; // Add 1 just in case (for 800Hz)
+    // stuck in this loop waiting for MEAS_M_DONE to go high. The solution is to timeout after
+    // 4 * the measurement time (defined by BW1/0).
+    uint16_t timeOut = getFilterBandwith(); // Read the bandwidth (100/200/400/800Hz) from shadow
+    timeOut = 800 / timeOut; // Convert timeOut to 8/4/2/1ms
+    timeOut *= 4; // Convert bw to 32/16/8/4ms
+    timeOut += 1; // Add 1 just in case (for 800Hz)
     do
     {
         // Wait a little so we won't flood MMC with requests
         delay(1);
-        bw--;
-    } while ((!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE)) && (bw > 0));
+        timeOut--;
+    } while ((!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE)) && (timeOut > 0));
 
     clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
 
-    return ((readFieldsXYZ(x, y, z)) & (bw > 0)); // Read the fields even if a timeout occurred - old data vs no data
+    // Read the fields even if a timeout occurred - old data vs no data
+    // Return false if a timeout or a read error occurred
+    return ((readFieldsXYZ(x, y, z)) && (timeOut > 0));
 }
 
 bool SFE_MMC5983MA::readFieldsXYZ(uint32_t *x, uint32_t *y, uint32_t *z)
