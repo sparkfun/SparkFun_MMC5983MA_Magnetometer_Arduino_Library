@@ -51,6 +51,9 @@ private:
   // Checks if a specific bit is set on a register memory shadow
   bool isShadowBitSet(uint8_t registerAddress, const uint8_t bitMask);
 
+  // Return a timeout for getMeasurement based on BW1/0
+  uint16_t getTimeout();
+
 public:
   // Default constructor.
   SFE_MMC5983MA() = default;
@@ -139,8 +142,9 @@ public:
   // Sets decimation filter bandwidth. Allowed values are 800, 400, 200 or 100. Defaults to 100 on invalid values.
   bool setFilterBandwidth(uint16_t bandwidth);
 
-  // Gets current decimation filter bandwith. Values are in Hz.
-  uint16_t getFilterBandwith();
+  // Gets current decimation filter bandwidth. Values are in Hz.
+  uint16_t getFilterBandwidth(); // Typo fix - #17
+  uint16_t getFilterBandwith() { return getFilterBandwidth(); } // Retained for backward compatibility
 
   // Enables continuous mode. Continuous mode frequency must be greater than 0.
   bool enableContinuousMode();
