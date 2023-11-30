@@ -448,7 +448,7 @@ bool SFE_MMC5983MA::areYZChannelsEnabled()
 bool SFE_MMC5983MA::setFilterBandwidth(uint16_t bandwidth)
 {
     // These must be set/cleared using the shadow memory since it can be read
-    // using getFilterBandwith()
+    // using getFilterBandwidth()
     bool success;
 
     switch (bandwidth)
@@ -492,7 +492,7 @@ bool SFE_MMC5983MA::setFilterBandwidth(uint16_t bandwidth)
     return success;
 }
 
-uint16_t SFE_MMC5983MA::getFilterBandwith()
+uint16_t SFE_MMC5983MA::getFilterBandwidth()
 {
     bool bw0 = isShadowBitSet(INT_CTRL_1_REG, BW0);
     bool bw1 = isShadowBitSet(INT_CTRL_1_REG, BW1);
@@ -520,6 +520,20 @@ uint16_t SFE_MMC5983MA::getFilterBandwith()
     }
 
     return retVal;
+}
+
+uint16_t SFE_MMC5983MA::getTimeout()
+{
+    // It is rare but there are some devices and some circumstances where the code can become
+    // stuck in the getMeasurement loop waiting for the MEAS_M_DONE bit to go high.
+    // We have seen this on SPI where the MMC5983 is sharing the bus with (e.g.) an ISM330 IMU
+    // which uses a different SPI mode.
+    // A solution is to timeout after 4 * the measurement time (defined by BW1/0).
+    uint16_t timeOut = getFilterBandwidth(); // Read the bandwidth (100/200/400/800Hz) from shadow
+    timeOut = 800 / timeOut; // Convert timeOut to 8/4/2/1ms
+    timeOut *= 4; // Convert bw to 32/16/8/4ms
+    timeOut += 1; // Add 1 just in case (for 800Hz)
+    return timeOut;
 }
 
 bool SFE_MMC5983MA::enableContinuousMode()
@@ -925,14 +939,8 @@ uint32_t SFE_MMC5983MA::getMeasurementX()
         return 0;
     }
 
-    // Wait until measurement is completed.
-    // It is rare but there are some devices and some circumstances where the code can become
-    // stuck in this loop waiting for MEAS_M_DONE to go high. The solution is to timeout after
-    // 4 * the measurement time (defined by BW1/0).
-    uint16_t timeOut = getFilterBandwith(); // Read the bandwidth (100/200/400/800Hz) from shadow
-    timeOut = 800 / timeOut; // Convert timeOut to 8/4/2/1ms
-    timeOut *= 4; // Convert bw to 32/16/8/4ms
-    timeOut += 1; // Add 1 just in case (for 800Hz)
+    // Wait until measurement is completed or times out
+    uint16_t timeOut = getTimeout();
     do
     {
         // Wait a little so we won't flood MMC with requests
@@ -970,14 +978,8 @@ uint32_t SFE_MMC5983MA::getMeasurementY()
         return 0;
     }
 
-    // Wait until measurement is completed.
-    // It is rare but there are some devices and some circumstances where the code can become
-    // stuck in this loop waiting for MEAS_M_DONE to go high. The solution is to timeout after
-    // 4 * the measurement time (defined by BW1/0).
-    uint16_t timeOut = getFilterBandwith(); // Read the bandwidth (100/200/400/800Hz) from shadow
-    timeOut = 800 / timeOut; // Convert timeOut to 8/4/2/1ms
-    timeOut *= 4; // Convert bw to 32/16/8/4ms
-    timeOut += 1; // Add 1 just in case (for 800Hz)
+    // Wait until measurement is completed or times out
+    uint16_t timeOut = getTimeout();
     do
     {
         // Wait a little so we won't flood MMC with requests
@@ -1015,14 +1017,8 @@ uint32_t SFE_MMC5983MA::getMeasurementZ()
         return 0;
     }
 
-    // Wait until measurement is completed.
-    // It is rare but there are some devices and some circumstances where the code can become
-    // stuck in this loop waiting for MEAS_M_DONE to go high. The solution is to timeout after
-    // 4 * the measurement time (defined by BW1/0).
-    uint16_t timeOut = getFilterBandwith(); // Read the bandwidth (100/200/400/800Hz) from shadow
-    timeOut = 800 / timeOut; // Convert timeOut to 8/4/2/1ms
-    timeOut *= 4; // Convert bw to 32/16/8/4ms
-    timeOut += 1; // Add 1 just in case (for 800Hz)
+    // Wait until measurement is completed or times out
+    uint16_t timeOut = getTimeout();
     do
     {
         // Wait a little so we won't flood MMC with requests
@@ -1060,14 +1056,8 @@ bool SFE_MMC5983MA::getMeasurementXYZ(uint32_t *x, uint32_t *y, uint32_t *z)
         return false;
     }
 
-    // Wait until measurement is completed.
-    // It is rare but there are some devices and some circumstances where the code can become
-    // stuck in this loop waiting for MEAS_M_DONE to go high. The solution is to timeout after
-    // 4 * the measurement time (defined by BW1/0).
-    uint16_t timeOut = getFilterBandwith(); // Read the bandwidth (100/200/400/800Hz) from shadow
-    timeOut = 800 / timeOut; // Convert timeOut to 8/4/2/1ms
-    timeOut *= 4; // Convert bw to 32/16/8/4ms
-    timeOut += 1; // Add 1 just in case (for 800Hz)
+    // Wait until measurement is completed or times out
+    uint16_t timeOut = getTimeout();
     do
     {
         // Wait a little so we won't flood MMC with requests
