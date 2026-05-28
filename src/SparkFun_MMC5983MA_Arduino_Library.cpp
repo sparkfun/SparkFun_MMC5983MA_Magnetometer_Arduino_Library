@@ -286,7 +286,11 @@ bool SFE_MMC5983MA::softReset()
     // always seems to read as 1...? I don't know why.
     bool success = setShadowBit(INT_CTRL_1_REG, SW_RST);
 
-    clearShadowBit(INT_CTRL_1_REG, SW_RST, false); // Clear the bit - in shadow memory only
+    // A soft reset clears all registers
+    clearShadowBit(INT_CTRL_0_REG, 0xFF, false);
+    clearShadowBit(INT_CTRL_1_REG, 0xFF, false);
+    clearShadowBit(INT_CTRL_2_REG, 0xFF, false);
+    clearShadowBit(INT_CTRL_3_REG, 0xFF, false);
 
     // The reset time is 10 msec. but we'll wait 15 msec. just in case.
     delay(15);
